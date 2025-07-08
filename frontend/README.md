@@ -1,14 +1,71 @@
-# React + Vite
+# Aplicación Web de Ventas
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Requisitos Previos
+- Node.js (versión 18 o superior)
+- pnpm (versión 8 o superior)
 
-Currently, two official plugins are available:
+## Instalación
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+1. Clonar el repositorio:
+```bash
+git clone <url-del-repositorio>
+cd frontend
+```
 
-## Expanding the ESLint configuration
+2. Instalar dependencias:
+```bash
+pnpm install
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Dependencias Principales
+
+### Producción
+- React v19.1.0
+- React Router DOM v7.6.3
+- Headless UI v2.2.4
+- Lucide React v0.525.0
+- Supabase JS v2.39.3
+- Axios v1.6.7
+
+### Desarrollo
+- Vite v7.0.0
+- Tailwind CSS v3.4.1
+- PostCSS v8.4.35
+- Autoprefixer v10.4.17
+- ESLint v9.29.0
+
+## Configuración
+
+1. Configurar variables de entorno:
+- Crear archivo `.env` basado en `.env.example`
+- Configurar las variables necesarias
+
+2. Iniciar servidor de desarrollo:
+```bash
+pnpm run dev
+```
+
+3. Construir para producción:
+```bash
+pnpm run build
+```
+
+## Estructura del Proyecto
+
+```
+src/
+  ├── assets/      # Recursos estáticos
+  ├── components/  # Componentes reutilizables
+  ├── pages/       # Páginas de la aplicación
+  ├── App.jsx      # Componente principal
+  └── main.jsx     # Punto de entrada
+```
+
+## Convenciones de Código
+
+- Usar nombres descriptivos en español para componentes y funciones
+- Seguir principios de diseño responsivo
+- Mantener componentes pequeños y reutilizables
+- Documentar funciones y componentes complejos
 
 Implementacion de cambios aplicados(comandos hechos)
