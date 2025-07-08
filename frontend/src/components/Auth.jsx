@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../supabase'
 import loginDecoration from '../assets/login-decoration.svg'
 import logo from '../assets/Logo.png'
+import { motion } from 'framer-motion'
 
 export default function Auth() {
   const [loading, setLoading] = useState(false)
@@ -78,8 +79,11 @@ export default function Auth() {
       <div className="flex w-1/2 items-center justify-center p-8">
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
-            <img src={logo} alt="VentasApp Logo" className="mx-auto h-12 w-auto" />
-            <h2 className="mt-6 text-3xl font-bold tracking-tight text-gray-900">
+            <div className="flex items-center justify-center gap-2">
+              <img src={logo} alt="VentasApp Logo" className="h-10 w-auto" />
+              <h1 className="text-3xl font-bold text-gray-900 -ml-1">TIKNO Market</h1>
+            </div>
+            <h2 className="mt-6 text-2xl font-bold tracking-tight text-gray-900">
               {isRegistering ? 'Crear cuenta' : 'Bienvenido de nuevo'}
             </h2>
             <p className="mt-2 text-sm text-gray-600">
@@ -185,7 +189,17 @@ export default function Auth() {
       <div className="relative hidden w-1/2 bg-gray-50 lg:block">
         <div className="absolute inset-0 flex items-center justify-center">
           <img src={loginDecoration} alt="Decoración" className="absolute max-w-full" />
-          <img src={logo} alt="VentasApp Logo" className="relative z-10 w-48" />
+          <motion.img
+            src={logo}
+            alt="VentasApp Logo"
+            className="relative z-10 w-48"
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{
+              duration: 0.4,
+              scale: { type: "spring", damping: 5, stiffness: 100, bounce: 0.5 }
+            }}
+          />
         </div>
       </div>
     </div>

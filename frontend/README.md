@@ -26,6 +26,7 @@ pnpm install
 - Lucide React v0.525.0
 - Supabase JS v2.39.3
 - Axios v1.6.7
+- Framer Motion - Animaciones fluidas y profesionales
 
 ### Desarrollo
 - Vite v7.0.0
@@ -68,4 +69,15 @@ src/
 - Mantener componentes pequeños y reutilizables
 - Documentar funciones y componentes complejos
 
-Implementacion de cambios aplicados(comandos hechos)
+## Implementación de cambios aplicados
+IMPORTANTE LEER
+### Animaciones con Framer Motion
+1. Instalación de la librería:
+```bash
+pnpm add framer-motion
+```
+
+2. Implementación en componentes:
+- Añadida animación de entrada para el logo en la página de login
+- Uso de motion.div y motion.img para elementos animados
+- Configuración de transiciones suaves y efectos spring
