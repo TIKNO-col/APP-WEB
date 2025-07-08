@@ -3,10 +3,12 @@ import { supabase } from '../supabase'
 import loginDecoration from '../assets/login-decoration.svg'
 import logo from '../assets/Logo.png'
 import { motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 
 export default function Auth() {
-  const [loading, setLoading] = useState(false)
-  const [email, setEmail] = useState('')
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('')
   const [isRegistering, setIsRegistering] = useState(false)
   const [nombre, setNombre] = useState('')
@@ -25,6 +27,7 @@ export default function Auth() {
       })
 
       if (error) throw error
+      navigate('/clientes')
     } catch (error) {
       setError(error.message)
     } finally {
@@ -74,18 +77,15 @@ export default function Auth() {
   }
 
   return (
-    <div className="flex min-h-screen bg-white">
-      {/* Lado izquierdo - Formulario */}
-      <div className="flex w-1/2 items-center justify-center p-8">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="w-full max-w-sm rounded-lg bg-white p-6 shadow-md">
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
             <div className="flex items-center justify-center gap-2">
               <img src={logo} alt="VentasApp Logo" className="h-10 w-auto" />
               <h1 className="text-3xl font-bold text-gray-900 -ml-1">TIKNO Market</h1>
             </div>
-            <h2 className="mt-6 text-2xl font-bold tracking-tight text-gray-900">
-              {isRegistering ? 'Crear cuenta' : 'Bienvenido de nuevo'}
-            </h2>
+        <h2 className="mb-6 text-center text-2xl font-bold text-gray-900">Iniciar Sesión</h2>
             <p className="mt-2 text-sm text-gray-600">
               {isRegistering ? 'Regístrate para comenzar' : 'Inicia sesión en tu cuenta'}
             </p>
@@ -160,7 +160,7 @@ export default function Auth() {
               <button
                 type="submit"
                 disabled={loading}
-                className="group relative flex w-full justify-center rounded-lg border border-transparent bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:opacity-50"
+                className="w-full rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-opacity-90 focus:outline-none focus:ring-4 focus:ring-blue-300"
               >
                 {loading ? 'Procesando...' : isRegistering ? 'Registrarse' : 'Iniciar sesión'}
               </button>

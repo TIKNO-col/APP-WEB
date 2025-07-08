@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Users, ShoppingCart, FileText, BarChart2, UserCircle, LogOut } from 'lucide-react';
 import { supabase } from '../supabase';
 
@@ -13,7 +13,7 @@ const Sidebar = () => {
     { name: 'Usuarios', icon: UserCircle, path: '/usuarios' },
   ];
 
-  const handleSignOut = async () => {
+  const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
     } catch (error) {
@@ -34,10 +34,7 @@ const Sidebar = () => {
               <Link
                 key={item.name}
                 to={item.path}
-                className={`flex items-center rounded-lg px-3 py-2 text-sm font-medium ${isActive
-                  ? 'bg-gray-100 text-gray-900'
-                  : 'text-gray-600 hover:bg-gray-50'
-                }`}
+                className={`flex items-center rounded-lg px-3 py-2 text-sm font-medium ${isActive ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50'}`}
               >
                 <item.icon className="h-5 w-5 mr-3" />
                 {item.name}
@@ -47,7 +44,7 @@ const Sidebar = () => {
         </nav>
         <div className="border-t border-gray-200 p-4">
           <button
-            onClick={handleSignOut}
+            onClick={handleLogout}
             className="flex w-full items-center rounded-lg px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
           >
             <LogOut className="h-5 w-5 mr-3" />
