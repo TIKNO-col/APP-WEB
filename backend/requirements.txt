@@ -8,3 +8,4 @@ djangorestframework==3.14.0
 dj-database-url==3.0.1
 #new 9/07/25
 djangorestframework-simplejwt==5.3.1
+
