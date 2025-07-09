@@ -2,12 +2,17 @@
 
 from pathlib import Path
 import environ
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Inicializar environ
-env = environ.Env()
+env = environ.Env(
+    # Valores por defecto
+    DEBUG=(bool, False)
+)
+# Leer archivo .env
 environ.Env.read_env(BASE_DIR / '.env')
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -42,7 +47,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# Configuración de CORS
+# ConfiguraciÃ³n de CORS
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
@@ -68,12 +73,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'BackWeb.wsgi.application'
 
-# Database
+# Database - Solo Supabase/PostgreSQL
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.parse(env('DATABASE_URL'))
 }
 
 # Password validation
@@ -105,5 +107,5 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Supabase configuration
-SUPABASE_URL = env('SUPABASE_URL')
-SUPABASE_KEY = env('SUPABASE_KEY')
+SUPABASE_URL = env('SUPABASE_URL', default='')
+SUPABASE_KEY = env('SUPABASE_KEY', default='')
