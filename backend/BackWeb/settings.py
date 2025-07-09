@@ -53,7 +53,19 @@ MIDDLEWARE = [
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5173',  # Frontend Vite
+    'http://localhost:5173',  # Frontend Vite default
+    'http://localhost:5174',  # Frontend Vite alternate
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:5174',
+]
+
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
 ]
 
 # Configuración de REST Framework

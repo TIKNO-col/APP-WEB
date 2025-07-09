@@ -32,38 +32,53 @@ async function refreshToken() {
 }
 
 // Función para hacer peticiones autenticadas
-async function fetchWithAuth(url, options = {}) {
+async function makeAuthenticatedRequest(endpoint, options = {}) {
+  const url = endpoint.startsWith('http') ? endpoint : `${BASE_URL}${endpoint}`;
   let token = localStorage.getItem('access_token');
 
   if (!token) {
     token = await refreshToken();
     if (!token) {
+      window.location.href = '/login';
       throw new Error('No hay token disponible');
     }
   }
 
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      ...options.headers,
-      'Authorization': `Bearer ${token}`,
-    },
-  });
-
-  if (response.status === 401) {
-    token = await refreshToken();
-    if (!token) throw new Error('Sesión expirada');
-
-    return fetch(url, {
+  try {
+    const response = await fetch(url, {
       ...options,
       headers: {
         ...options.headers,
         'Authorization': `Bearer ${token}`,
+        'Content-Type': options.headers?.['Content-Type'] || 'application/json',
       },
     });
-  }
 
-  return response;
+    if (response.status === 401) {
+      token = await refreshToken();
+      if (!token) {
+        logout();
+        throw new Error('Sesión expirada');
+      }
+
+      return fetch(url, {
+        ...options,
+        headers: {
+          ...options.headers,
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': options.headers?.['Content-Type'] || 'application/json',
+        },
+      });
+    }
+
+    return response;
+  } catch (error) {
+    console.error('Request error:', error);
+    if (!token) {
+      logout();
+    }
+    throw error;
+  }
 }
 
 // Función para cerrar sesión
@@ -73,4 +88,4 @@ function logout() {
   window.location.href = '/login';
 }
 
-export { fetchWithAuth, logout };
+export { makeAuthenticatedRequest, logout };

@@ -25,3 +25,19 @@ class Usuario(AbstractUser):
         db_table = 'usuarios'  # Nombre exacto de la tabla en Supabase
         verbose_name = 'Usuario'
         verbose_name_plural = 'Usuarios'
+
+class Cliente(models.Model):
+    cedula = models.CharField(max_length=20, primary_key=True)
+    nombre = models.CharField(max_length=100)
+    email = models.EmailField(unique=True)
+    telefono = models.CharField(max_length=20, null=True, blank=True)
+    ciudad = models.CharField(max_length=50, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'clientes'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.nombre} - {self.cedula}"
