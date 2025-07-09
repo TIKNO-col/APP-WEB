@@ -1,6 +1,4 @@
 import { useState, useEffect } from 'react'
-import { supabase } from './supabase'
-
 import Auth from './components/Auth'
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import Sidebar from './components/Sidebar'
@@ -11,27 +9,20 @@ import Informes from './pages/Informes'
 import Usuarios from './pages/Usuarios'
 
 const ProtectedRoute = ({ children }) => {
-  const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setLoading(false)
-    })
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-    })
-
-    return () => subscription.unsubscribe()
+    const token = localStorage.getItem('access_token')
+    setIsAuthenticated(!!token)
+    setLoading(false)
   }, [])
 
   if (loading) {
     return <div>Cargando...</div>
   }
 
-  if (!session) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />
   }
 

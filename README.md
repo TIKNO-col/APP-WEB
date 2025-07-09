@@ -6,6 +6,8 @@ Un proyecto full stack moderno que combina Django como backend y React con Vite 
 
 ### Backend
 - **Django 5.2.4** - Framework web de Python
+- **Django REST Framework** - API REST framework 
+- **Simple JWT** - Autenticación basada en tokens JWT
 - **SQLite** - Base de datos (por defecto)
 - **Python** - Lenguaje de programación
 
@@ -32,7 +34,9 @@ APP WEB/
 │   │   └── asgi.py         # Configuración ASGI
 │   ├── mi_app/             # Aplicación Django personalizada
 │   │   ├── models.py       # Modelos de datos
-│   │   ├── views.py        # Vistas
+│   │   ├── views.py        # Vistas y endpoints de API
+│   │   ├── serializers.py  # Serializadores para la API
+│   │   ├── urls.py         # URLs de la API
 │   │   ├── admin.py        # Configuración del admin
 │   │   └── apps.py         # Configuración de la app
 │   ├── manage.py           # Utilidad de línea de comandos de Django
@@ -41,6 +45,10 @@ APP WEB/
     ├── src/                # Código fuente
     │   ├── App.jsx         # Componente principal
     │   ├── main.jsx        # Punto de entrada
+    │   ├── components/     # Componentes reutilizables
+    │   │   └── Auth.jsx    # Componente de autenticación
+    │   ├── services/       # Servicios y utilidades
+    │   │   └── auth.js     # Servicio de autenticación
     │   ├── App.css         # Estilos del componente principal
     │   └── index.css       # Estilos globales
     ├── public/             # Archivos públicos
@@ -142,6 +150,43 @@ El frontend estará disponible en: `http://localhost:5173`
 - `pnpm run preview` - Previsualizar build de producción
 - `pnpm run lint` - Ejecutar linter
 
+## 🔑 Autenticación
+
+El proyecto utiliza autenticación basada en JWT (JSON Web Tokens):
+
+### Endpoints de Autenticación
+
+- **Registro**: `POST /api/auth/registro/`
+  ```json
+  {
+    "email": "usuario@ejemplo.com",
+    "username": "usuario",
+    "password": "contraseña",
+    "nombre": "Nombre Completo"
+  }
+  ```
+
+- **Login**: `POST /api/auth/login/`
+  ```json
+  {
+    "email": "usuario@ejemplo.com",
+    "password": "contraseña"
+  }
+  ```
+
+- **Refrescar Token**: `POST /api/auth/refresh/`
+  ```json
+  {
+    "refresh": "token-de-refresco"
+  }
+  ```
+
+### Manejo de Tokens en el Frontend
+
+Los tokens JWT se almacenan en el localStorage:
+- `access_token`: Token de acceso para autenticación
+- `refresh_token`: Token para renovar el acceso
+
 ## 🔧 Configuración Adicional
 
 ### Variables de Entorno
@@ -170,8 +215,9 @@ El proyecto usa SQLite por defecto. Para usar PostgreSQL o MySQL:
 ## 🌐 URLs Importantes
 
 - **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:8000
+- **Backend API**: http://localhost:8000/api
 - **Admin de Django**: http://localhost:8000/admin
+- **Documentación API**: http://localhost:8000/api/schema/swagger-ui/
 
 ## 🤝 Contribución
 

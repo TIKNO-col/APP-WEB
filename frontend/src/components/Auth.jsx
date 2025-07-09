@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { supabase } from '../supabase'
 import loginDecoration from '../assets/login-decoration.svg'
 import logo from '../assets/Logo.png'
 import { motion } from 'framer-motion'
@@ -12,6 +11,7 @@ export default function Auth() {
   const [password, setPassword] = useState('')
   const [isRegistering, setIsRegistering] = useState(false)
   const [nombre, setNombre] = useState('')
+  const [username, setUsername] = useState('')
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
 
@@ -21,14 +21,29 @@ export default function Auth() {
     setSuccess(null)
     try {
       setLoading(true)
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const response = await fetch('http://localhost:8000/api/auth/login/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
       })
 
-      if (error) throw error
-      navigate('/clientes')
+      const data = await response.json()
+
+      if (!response.ok) throw new Error(data.detail || 'Error al iniciar sesión')
+
+      // Guardar tokens en localStorage
+      localStorage.setItem('access_token', data.access)
+      localStorage.setItem('refresh_token', data.refresh)
+
+      // Forzar la recarga del estado de autenticación
+      window.location.href = '/clientes'
     } catch (error) {
+      console.error('Error durante el login:', error)
       setError(error.message)
     } finally {
       setLoading(false)
@@ -41,34 +56,29 @@ export default function Auth() {
     setSuccess(null)
     try {
       setLoading(true)
-      // Registrar el usuario con Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            nombre: nombre,
-          },
+      const response = await fetch('http://localhost:8000/api/auth/registro/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          email,
+          username,
+          password,
+          nombre,
+          rol: 'usuario',
+          zona_acceso: 'general'
+        }),
       })
 
-      if (authError) throw authError
+      const data = await response.json()
 
-      if (authData?.user) {
-        // Insertar información adicional en la tabla usuarios
-        const { error: profileError } = await supabase
-          .from('usuarios')
-          .insert([{
-            email,
-            nombre,
-            password_hash: password, // Esto es temporal, idealmente el hash debería manejarse en el backend
-            rol: 'admin',
-            zona_acceso: 'general'
-          }])
-
-        if (profileError) throw profileError
-        setSuccess('Registro completado exitosamente. Iniciando sesión...')
+      if (!response.ok) {
+        throw new Error(data.detail || 'Error en el registro')
       }
+
+      setSuccess('Registro completado exitosamente. Ahora puedes iniciar sesión.')
+      setIsRegistering(false)
     } catch (error) {
       setError(error.message)
     } finally {
@@ -85,27 +95,43 @@ export default function Auth() {
               <img src={logo} alt="VentasApp Logo" className="h-10 w-auto" />
               <h1 className="text-3xl font-bold text-gray-900 -ml-1">TIKNO Market</h1>
             </div>
-        <h2 className="mb-6 text-center text-2xl font-bold text-gray-900">Iniciar Sesión</h2>
+            <h2 className="mb-6 text-center text-2xl font-bold text-gray-900">Iniciar Sesión</h2>
             <p className="mt-2 text-sm text-gray-600">
               {isRegistering ? 'Regístrate para comenzar' : 'Inicia sesión en tu cuenta'}
             </p>
           </div>
           <form className="mt-8 space-y-6" onSubmit={isRegistering ? handleSignUp : handleLogin}>
             {isRegistering && (
-              <div>
-                <label htmlFor="nombre" className="block text-sm font-medium text-gray-700">
-                  Nombre completo
-                </label>
-                <input
-                  id="nombre"
-                  name="nombre"
-                  type="text"
-                  required
-                  value={nombre}
-                  onChange={(e) => setNombre(e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 placeholder-gray-500 focus:border-black focus:ring-black sm:text-sm"
-                />
-              </div>
+              <>
+                <div>
+                  <label htmlFor="nombre" className="block text-sm font-medium text-gray-700">
+                    Nombre completo
+                  </label>
+                  <input
+                    id="nombre"
+                    name="nombre"
+                    type="text"
+                    required
+                    value={nombre}
+                    onChange={(e) => setNombre(e.target.value)}
+                    className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 placeholder-gray-500 focus:border-black focus:ring-black sm:text-sm"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+                    Nombre de usuario
+                  </label>
+                  <input
+                    id="username"
+                    name="username"
+                    type="text"
+                    required
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 placeholder-gray-500 focus:border-black focus:ring-black sm:text-sm"
+                  />
+                </div>
+              </>
             )}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -173,6 +199,7 @@ export default function Auth() {
                   setIsRegistering(!isRegistering)
                   setError(null)
                   setSuccess(null)
+                  setUsername('')
                 }}
                 className="text-sm text-gray-600 hover:text-black"
               >

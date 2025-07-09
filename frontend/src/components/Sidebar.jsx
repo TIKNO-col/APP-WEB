@@ -1,6 +1,6 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Users, ShoppingCart, FileText, BarChart2, UserCircle, LogOut } from 'lucide-react';
-import { supabase } from '../supabase';
+import { logout } from '../services/auth';
 
 const Sidebar = () => {
   const location = useLocation();
@@ -13,12 +13,8 @@ const Sidebar = () => {
     { name: 'Usuarios', icon: UserCircle, path: '/usuarios' },
   ];
 
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-    } catch (error) {
-      console.error('Error al cerrar sesión:', error);
-    }
+  const handleLogout = () => {
+    logout();
   };
 
   return (

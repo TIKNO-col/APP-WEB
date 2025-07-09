@@ -1,19 +1,34 @@
-from rest_framework import viewsets
+from rest_framework import status, generics
 from rest_framework.response import Response
-from .models import Usuario
-from .serializers import UsuarioSerializer
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework_simplejwt.views import TokenObtainPairView
+from django.contrib.auth import get_user_model
+from .serializers import UsuarioSerializer, CustomTokenObtainPairSerializer
 
-class UsuarioViewSet(viewsets.ModelViewSet):
+Usuario = get_user_model()
+
+class RegistroUsuarioView(generics.CreateAPIView):
     queryset = Usuario.objects.all()
+    permission_classes = (AllowAny,)
     serializer_class = UsuarioSerializer
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        return Response(serializer.data)
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 
-    def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+class PerfilUsuarioView(generics.RetrieveUpdateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = UsuarioSerializer
+
+    def get_object(self):
+        return self.request.user
+
+class ListaUsuariosView(generics.ListAPIView):
+    queryset = Usuario.objects.all()
+    serializer_class = UsuarioSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        # Solo los administradores pueden ver todos los usuarios
+        if self.request.user.rol == 'admin':
+            return Usuario.objects.all()
+        return Usuario.objects.none()
