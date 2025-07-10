@@ -87,139 +87,147 @@ export default function Auth() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <div className="w-full max-w-sm rounded-lg bg-white p-6 shadow-md">
-        <div className="w-full max-w-md space-y-8">
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2">
-              <img src={logo} alt="VentasApp Logo" className="h-10 w-auto" />
-              <h1 className="text-3xl font-bold text-gray-900 -ml-1">TIKNO Market</h1>
-            </div>
-            <h2 className="mb-6 text-center text-2xl font-bold text-gray-900">Iniciar Sesión</h2>
-            <p className="mt-2 text-sm text-gray-600">
-              {isRegistering ? 'Regístrate para comenzar' : 'Inicia sesión en tu cuenta'}
-            </p>
-          </div>
-          <form className="mt-8 space-y-6" onSubmit={isRegistering ? handleSignUp : handleLogin}>
-            {isRegistering && (
-              <>
-                <div>
-                  <label htmlFor="nombre" className="block text-sm font-medium text-gray-700">
-                    Nombre completo
-                  </label>
-                  <input
-                    id="nombre"
-                    name="nombre"
-                    type="text"
-                    required
-                    value={nombre}
-                    onChange={(e) => setNombre(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 placeholder-gray-500 focus:border-black focus:ring-black sm:text-sm"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                    Nombre de usuario
-                  </label>
-                  <input
-                    id="username"
-                    name="username"
-                    type="text"
-                    required
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 placeholder-gray-500 focus:border-black focus:ring-black sm:text-sm"
-                  />
-                </div>
-              </>
-            )}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Correo electrónico
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 placeholder-gray-500 focus:border-black focus:ring-black sm:text-sm"
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Contraseña
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 placeholder-gray-500 focus:border-black focus:ring-black sm:text-sm"
-              />
-            </div>
-
-            {success && (
-              <div className="rounded-lg bg-green-50 p-4">
-                <div className="flex">
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-green-800">{success}</h3>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {error && (
-              <div className="rounded-lg bg-red-50 p-4">
-                <div className="flex">
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-red-800">{error}</h3>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-opacity-90 focus:outline-none focus:ring-4 focus:ring-blue-300"
-              >
-                {loading ? 'Procesando...' : isRegistering ? 'Registrarse' : 'Iniciar sesión'}
-              </button>
-            </div>
-
+    <div className="relative flex min-h-screen">
+      {/* Fondo con degradado */}
+      <div className="absolute inset-0 flex">
+        <div className="w-[35%] bg-[#111827]"></div>
+        <div className="flex-1 bg-white"></div>
+      </div>
+      <div className="relative w-[35%] flex items-center justify-center">
+        <div className="w-full max-w-md rounded-xl bg-[#FFFFFF] p-8 shadow-lg">
+          <div className="w-full space-y-6">
             <div className="text-center">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsRegistering(!isRegistering)
-                  setError(null)
-                  setSuccess(null)
-                  setUsername('')
-                }}
-                className="text-sm text-gray-600 hover:text-black"
-              >
-                {isRegistering
-                  ? '¿Ya tienes una cuenta? Inicia sesión'
-                  : '¿No tienes una cuenta? Regístrate'}
-              </button>
+              <div className="flex items-center justify-center gap-3 mb-2">
+                <img src={logo} alt="VentasApp Logo" className="h-12 w-auto" />
+                <h1 className="text-4xl font-bold text-[#111827]">TIKNO Market</h1>
+              </div>
+              <h2 className="text-center text-2xl font-semibold text-[#111827]">
+                {isRegistering ? 'Crear cuenta nueva' : 'Bienvenido de nuevo'}
+              </h2>
+              <p className="text-center text-sm text-[#6B7280]">
+                {isRegistering ? 'Completa tus datos para registrarte' : 'Ingresa tus credenciales para continuar'}
+              </p>
             </div>
-          </form>
+            <form className="mt-8 space-y-6" onSubmit={isRegistering ? handleSignUp : handleLogin}>
+              {isRegistering && (
+                <>
+                  <div>
+                    <label htmlFor="nombre" className="block text-sm font-medium text-[#6B7280]">
+                      Nombre completo
+                    </label>
+                    <input
+                      id="nombre"
+                      name="nombre"
+                      type="text"
+                      required
+                      value={nombre}
+                      onChange={(e) => setNombre(e.target.value)}
+                      className="mt-1 block w-full rounded-lg border border-[#E5E7EB] px-4 py-2 text-[#111827] placeholder-[#6B7280] focus:border-[#3B82F6] focus:ring-[#3B82F6] sm:text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="username" className="block text-sm font-medium text-[#6B7280]">
+                      Nombre de usuario
+                    </label>
+                    <input
+                      id="username"
+                      name="username"
+                      type="text"
+                      required
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className="mt-1 block w-full rounded-lg border border-[#E5E7EB] px-4 py-2 text-[#111827] placeholder-[#6B7280] focus:border-[#3B82F6] focus:ring-[#3B82F6] sm:text-sm"
+                    />
+                  </div>
+                </>
+              )}
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-[#6B7280]">
+                  Correo electrónico
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="mt-1 block w-full rounded-lg border border-[#E5E7EB] px-4 py-2 text-[#111827] placeholder-[#6B7280] focus:border-[#3B82F6] focus:ring-[#3B82F6] sm:text-sm"
+                />
+              </div>
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-[#6B7280]">
+                  Contraseña
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="mt-1 block w-full rounded-lg border border-[#E5E7EB] px-4 py-2 text-[#111827] placeholder-[#6B7280] focus:border-[#3B82F6] focus:ring-[#3B82F6] sm:text-sm"
+                />
+              </div>
+
+              {success && (
+                <div className="rounded-lg bg-green-50 p-4">
+                  <div className="flex">
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-green-800">{success}</h3>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {error && (
+                <div className="rounded-lg bg-red-50 p-4">
+                  <div className="flex">
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-red-800">{error}</h3>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full rounded-lg bg-[#3B82F6] px-6 py-3 text-base font-semibold text-[#FFFFFF] transition-all duration-150 hover:bg-[#2563EB] focus:outline-none focus:ring-4 focus:ring-[#93C5FD] disabled:opacity-70"
+                >
+                  {loading ? 'Procesando...' : isRegistering ? 'Crear cuenta' : 'Iniciar sesión'}
+                </button>
+              </div>
+
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsRegistering(!isRegistering)
+                    setError(null)
+                    setSuccess(null)
+                    setUsername('')
+                  }}
+                  className="text-sm font-medium text-[#3B82F6] hover:text-[#2563EB] transition-colors duration-150"
+                >
+                  {isRegistering
+                    ? '¿Ya tienes una cuenta? Inicia sesión'
+                    : '¿No tienes una cuenta? Regístrate'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
 
       {/* Lado derecho - Decoración */}
-      <div className="relative hidden w-1/2 bg-gray-50 lg:block">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <img src={loginDecoration} alt="Decoración" className="absolute max-w-full" />
-          <motion.img
-            src={logo}
-            alt="VentasApp Logo"
-            className="relative z-10 w-48"
+      <div className="relative w-[65%] flex items-center justify-center pl-32">
+        <div className="relative bg-[#E5E7EB] rounded-full p-20 shadow-2xl">
+            <motion.img
+              src={logo}
+              alt="VentasApp Logo"
+              className="w-48"
             initial={{ opacity: 0, scale: 0 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{
