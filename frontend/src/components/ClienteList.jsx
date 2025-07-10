@@ -120,54 +120,108 @@ const ClienteList = () => {
       </div>
 
       {showForm && (
-        <div className="mb-6 p-4 bg-white rounded-lg shadow">
-          <ClienteForm
-            onClienteAdded={handleClienteAdded}
-            initialData={editingCliente}
-            isEditing={!!editingCliente}
-            onCancel={() => {
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
               setShowForm(false);
               setEditingCliente(null);
-            }}
-          />
+            }
+          }}
+        >
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-800">
+                  {editingCliente ? 'Editar Cliente' : 'Nuevo Cliente'}
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowForm(false);
+                    setEditingCliente(null);
+                  }}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+              <ClienteForm
+                onClienteAdded={handleClienteAdded}
+                initialData={editingCliente}
+                isEditing={!!editingCliente}
+                onCancel={() => {
+                  setShowForm(false);
+                  setEditingCliente(null);
+                }}
+              />
+            </div>
+          </div>
         </div>
       )}
 
       {viewingCliente && (
-        <div className="mb-6 p-4 bg-white rounded-lg shadow">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-semibold text-gray-800">Detalles del Cliente</h3>
-            <button
-              onClick={() => setViewingCliente(null)}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              ✕
-            </button>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm font-medium text-gray-500">Cédula</p>
-              <p className="text-gray-900">{viewingCliente.cedula}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Nombre</p>
-              <p className="text-gray-900">{viewingCliente.nombre}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Email</p>
-              <p className="text-gray-900">{viewingCliente.email}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Teléfono</p>
-              <p className="text-gray-900">{viewingCliente.telefono}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Ciudad</p>
-              <p className="text-gray-900">{viewingCliente.ciudad}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Fecha de Registro</p>
-              <p className="text-gray-900">{new Date(viewingCliente.created_at).toLocaleDateString()}</p>
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setViewingCliente(null);
+            }
+          }}
+        >
+          <div className="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-semibold text-gray-800">Detalles del Cliente</h3>
+                <button
+                  onClick={() => setViewingCliente(null)}
+                  className="text-gray-500 hover:text-gray-700 text-xl"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="grid grid-cols-1 gap-4">
+                <div className="border-b pb-3">
+                  <p className="text-sm font-medium text-gray-500 mb-1">Cédula</p>
+                  <p className="text-gray-900 font-semibold">{viewingCliente.cedula}</p>
+                </div>
+                <div className="border-b pb-3">
+                  <p className="text-sm font-medium text-gray-500 mb-1">Nombre</p>
+                  <p className="text-gray-900 font-semibold">{viewingCliente.nombre}</p>
+                </div>
+                <div className="border-b pb-3">
+                  <p className="text-sm font-medium text-gray-500 mb-1">Email</p>
+                  <p className="text-gray-900">{viewingCliente.email}</p>
+                </div>
+                <div className="border-b pb-3">
+                  <p className="text-sm font-medium text-gray-500 mb-1">Teléfono</p>
+                  <p className="text-gray-900">{viewingCliente.telefono || 'No especificado'}</p>
+                </div>
+                <div className="border-b pb-3">
+                  <p className="text-sm font-medium text-gray-500 mb-1">Ciudad</p>
+                  <p className="text-gray-900">{viewingCliente.ciudad || 'No especificada'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500 mb-1">Fecha de Registro</p>
+                  <p className="text-gray-900">{new Date(viewingCliente.created_at).toLocaleDateString()}</p>
+                </div>
+              </div>
+              <div className="flex justify-end mt-6 space-x-3">
+                <button
+                  onClick={() => {
+                    setViewingCliente(null);
+                    handleEdit(viewingCliente);
+                  }}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+                >
+                  Editar
+                </button>
+                <button
+                  onClick={() => setViewingCliente(null)}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                >
+                  Cerrar
+                </button>
+              </div>
             </div>
           </div>
         </div>
