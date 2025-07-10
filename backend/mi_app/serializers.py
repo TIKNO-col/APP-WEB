@@ -8,13 +8,23 @@ Usuario = get_user_model()
 
 class UsuarioSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False, validators=[validate_password])
+    is_admin = serializers.SerializerMethodField()
+    created_at_formatted = serializers.SerializerMethodField()
 
     class Meta:
         model = Usuario
-        fields = ('id', 'email', 'username', 'password', 'nombre', 'rol', 'zona_acceso')
+        fields = ('id', 'email', 'username', 'password', 'nombre', 'rol', 
+                 'zona_acceso', 'is_admin', 'created_at_formatted', 'created_at')
         extra_kwargs = {
-            'password': {'write_only': True}
+            'password': {'write_only': True},
+            'created_at': {'write_only': True}
         }
+
+    def get_is_admin(self, obj):
+        return obj.rol == 'admin'
+
+    def get_created_at_formatted(self, obj):
+        return obj.created_at.strftime('%d/%m/%Y %H:%M') if obj.created_at else None
 
     def create(self, validated_data):
         user = Usuario.objects.create_user(

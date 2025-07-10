@@ -70,12 +70,44 @@ class PerfilUsuarioView(RetrieveUpdateAPIView):
 class ListaUsuariosView(ListAPIView):
     serializer_class = UsuarioSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    queryset = Usuario.objects.all()
-
+    
     def get_queryset(self):
-        if self.request.user.rol == 'admin':
-            return Usuario.objects.all().order_by('-created_at')
-        return Usuario.objects.filter(id=self.request.user.id)
+        queryset = Usuario.objects.select_related().all()
+        if self.request.user.rol != 'admin':
+            queryset = queryset.filter(id=self.request.user.id)
+        return queryset.order_by('-created_at')
+
+class PerfilUsuarioView(RetrieveUpdateAPIView):
+    serializer_class = UsuarioSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+    
+    def get_object(self):
+        if self.kwargs.get('pk'):
+            return Usuario.objects.select_related().get(pk=self.kwargs['pk'])
+        return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        
+        if request.user.rol != 'admin':
+            if 'rol' in request.data or 'zona_acceso' in request.data:
+                return Response(
+                    {'detail': 'No tienes permiso para modificar roles o zonas de acceso'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+        
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        return Response(serializer.data)
+
+    def delete(self, request, *args, **kwargs):
+        if not request.user.rol == 'admin':
+            return Response({'detail': 'No tienes permiso para eliminar usuarios'}, 
+                            status=status.HTTP_403_FORBIDDEN)
+        return super().destroy(request, *args, **kwargs)
 
 class UsuarioDetailView(RetrieveUpdateDestroyAPIView):
     serializer_class = UsuarioSerializer

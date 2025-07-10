@@ -17,35 +17,28 @@ const UsuarioList = () => {
   const fetchUsuarios = async () => {
     try {
       setLoading(true);
-      console.log('Iniciando fetchUsuarios...');
       
-      // Primero obtener el perfil del usuario actual
-      const perfilResponse = await makeAuthenticatedRequest('/usuarios/perfil/', {
-        method: 'GET',
-      });
-      const perfilData = await perfilResponse.json();
-      console.log('Perfil del usuario:', perfilData);
+      // Realizar ambas peticiones en paralelo
+      const [perfilResponse, usuariosResponse] = await Promise.all([
+        makeAuthenticatedRequest('/usuarios/perfil/', { method: 'GET' }),
+        makeAuthenticatedRequest('/usuarios/', { method: 'GET' })
+      ]);
+
+      const [perfilData, usuariosData] = await Promise.all([
+        perfilResponse.json(),
+        usuariosResponse.json()
+      ]);
+
+      if (!perfilResponse.ok) throw new Error(perfilData.detail || 'Error al obtener el perfil');
+      if (!usuariosResponse.ok) throw new Error(usuariosData.detail || 'Error al obtener los usuarios');
 
       setCurrentUser(perfilData);
       setIsAdmin(perfilData.rol === 'admin');
-      
-      const response = await makeAuthenticatedRequest('/usuarios/', {
-        method: 'GET',
-      });
-
-      console.log('Response status:', response.status);
-      const data = await response.json();
-
-      if (response.ok) {
-        console.log('Datos recibidos:', data);
-        setUsuarios(data);
-        setError(null);
-      } else {
-        throw new Error(data.detail || 'Error al obtener los usuarios');
-      }
+      setUsuarios(usuariosData);
+      setError(null);
     } catch (error) {
-      console.error('Error fetching usuarios:', error);
-      setError(error.message || 'Error al cargar los usuarios');
+      console.error('Error fetching data:', error);
+      setError(error.message || 'Error al cargar los datos');
     } finally {
       setLoading(false);
     }
@@ -53,7 +46,7 @@ const UsuarioList = () => {
 
   useEffect(() => {
     fetchUsuarios();
-  }, [showModal]);
+  }, []); // Solo se ejecuta al montar el componente
 
   const handleView = (usuario) => {
     setSelectedUsuario(usuario);
@@ -62,7 +55,6 @@ const UsuarioList = () => {
   };
 
   const handleEdit = (usuario) => {
-    // Solo permitir edición si es admin o si es el propio usuario
     if (isAdmin || usuario.id === currentUser.id) {
       setSelectedUsuario(usuario);
       setModalMode('edit');
@@ -79,7 +71,6 @@ const UsuarioList = () => {
   };
 
   const handleDelete = async (usuario) => {
-    // Solo permitir eliminación si es admin
     if (!isAdmin) {
       alert('No tienes permiso para eliminar usuarios');
       return;
@@ -97,9 +88,8 @@ const UsuarioList = () => {
         });
 
         if (response.ok) {
-          setUsuarios(usuarios.filter(u => u.id !== usuario.id));
+          setUsuarios(prevUsuarios => prevUsuarios.filter(u => u.id !== usuario.id));
           alert('Usuario eliminado exitosamente');
-          fetchUsuarios(); // Recargar la lista después de eliminar
         } else {
           const data = await response.json().catch(() => ({}));
           throw new Error(data.detail || 'Error al eliminar el usuario');
@@ -141,12 +131,14 @@ const UsuarioList = () => {
 
       if (response.ok) {
         if (modalMode === 'create') {
-          setUsuarios([data, ...usuarios]);
+          setUsuarios(prevUsuarios => [data, ...prevUsuarios]);
           alert('Usuario creado exitosamente');
         } else {
-          setUsuarios(usuarios.map(usuario => 
-            usuario.id === selectedUsuario.id ? data : usuario
-          ));
+          setUsuarios(prevUsuarios => 
+            prevUsuarios.map(usuario => 
+              usuario.id === selectedUsuario.id ? data : usuario
+            )
+          );
           alert('Usuario actualizado exitosamente');
         }
         setError(null);
@@ -182,7 +174,7 @@ const UsuarioList = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+        <div className="text-xl text-blue-500">Cargando usuarios...</div>
       </div>
     );
   }
