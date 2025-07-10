@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .models import Cliente
+from .models import Cliente, Categoria, Producto
 
 Usuario = get_user_model()
 
@@ -55,3 +55,28 @@ class ClienteSerializer(serializers.ModelSerializer):
         model = Cliente
         fields = ['cedula', 'nombre', 'email', 'telefono', 'ciudad', 'created_at', 'updated_at']
         read_only_fields = ['created_at', 'updated_at']
+
+class CategoriaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Categoria
+        fields = ['id', 'nombre', 'descripcion', 'created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at']
+
+class ProductoSerializer(serializers.ModelSerializer):
+    categoria_nombre = serializers.CharField(source='categoria.nombre', read_only=True)
+
+    class Meta:
+        model = Producto
+        fields = ['id', 'nombre', 'descripcion', 'precio', 'stock', 'imagen_url', 
+                 'categoria', 'categoria_nombre', 'created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at']
+
+    def validate_precio(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("El precio debe ser mayor que 0")
+        return value
+
+    def validate_stock(self, value):
+        if value < 0:
+            raise serializers.ValidationError("El stock no puede ser negativo")
+        return value

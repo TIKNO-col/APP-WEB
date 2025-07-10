@@ -75,6 +75,10 @@ IMPORTANTE LEER
 1. Instalación de la librería:
 ```bash
 pnpm add framer-motion
+### nuevas INSTALACIONES
+pnpm i @cloudinary/url-gen @cloudinary/react
+pnpm install sha.js
+
 ```
 
 2. Implementación en componentes:

@@ -7,11 +7,15 @@ from .views import (
     PerfilUsuarioView,
     ListaUsuariosView,
     UsuarioDetailView,
-    ClienteViewSet
+    ClienteViewSet,
+    ProductoViewSet,
+    CategoriaViewSet
 )
 
 router = DefaultRouter()
 router.register(r'clientes', ClienteViewSet)
+router.register(r'productos', ProductoViewSet)
+router.register(r'categorias', CategoriaViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
@@ -20,5 +24,5 @@ urlpatterns = [
     path('auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('usuarios/perfil/', PerfilUsuarioView.as_view(), name='perfil_usuario'),
     path('usuarios/', ListaUsuariosView.as_view(), name='lista_usuarios'),
-    path('usuarios/<uuid:pk>/', UsuarioDetailView.as_view(), name='usuario_detail'),
+    path('usuarios/<uuid:pk>/', UsuarioDetailView.as_view(), name='detalle_usuario'),
 ]

@@ -41,3 +41,35 @@ class Cliente(models.Model):
 
     def __str__(self):
         return f"{self.nombre} - {self.cedula}"
+
+class Categoria(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    nombre = models.CharField(max_length=100)
+    descripcion = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'categorias'
+        ordering = ['nombre']
+
+    def __str__(self):
+        return self.nombre
+
+class Producto(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    nombre = models.CharField(max_length=255)
+    descripcion = models.TextField(null=True, blank=True)
+    precio = models.DecimalField(max_digits=10, decimal_places=2)
+    stock = models.IntegerField()
+    imagen_url = models.URLField(null=True, blank=True)
+    categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'productos'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.nombre} - ${self.precio}"

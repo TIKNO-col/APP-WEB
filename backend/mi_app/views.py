@@ -4,8 +4,14 @@ from rest_framework import status
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView
-from .serializers import UsuarioSerializer, CustomTokenObtainPairSerializer, ClienteSerializer
-from .models import Cliente
+from .serializers import (
+    UsuarioSerializer, 
+    CustomTokenObtainPairSerializer, 
+    ClienteSerializer,
+    ProductoSerializer,
+    CategoriaSerializer
+)
+from .models import Cliente, Producto, Categoria
 
 Usuario = get_user_model()
 
@@ -189,3 +195,47 @@ class ClienteViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+class CategoriaViewSet(viewsets.ModelViewSet):
+    queryset = Categoria.objects.all()
+    serializer_class = CategoriaSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Categoria.objects.all().order_by('nombre')
+
+class ProductoViewSet(viewsets.ModelViewSet):
+    queryset = Producto.objects.all()
+    serializer_class = ProductoSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = Producto.objects.all().order_by('-created_at')
+        categoria = self.request.query_params.get('categoria', None)
+        if categoria is not None:
+            queryset = queryset.filter(categoria_id=categoria)
+        return queryset
+
+    def create(self, request, *args, **kwargs):
+        if request.user.rol != 'admin':
+            return Response(
+                {'detail': 'Solo los administradores pueden crear productos'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        if request.user.rol != 'admin':
+            return Response(
+                {'detail': 'Solo los administradores pueden modificar productos'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return super().update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        if request.user.rol != 'admin':
+            return Response(
+                {'detail': 'Solo los administradores pueden eliminar productos'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return super().destroy(request, *args, **kwargs)
