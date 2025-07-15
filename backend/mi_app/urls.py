@@ -9,13 +9,17 @@ from .views import (
     UsuarioDetailView,
     ClienteViewSet,
     ProductoViewSet,
-    CategoriaViewSet
+    CategoriaViewSet,
+    VentaViewSet,
+    VentaItemViewSet
 )
 
 router = DefaultRouter()
 router.register(r'clientes', ClienteViewSet)
 router.register(r'productos', ProductoViewSet)
 router.register(r'categorias', CategoriaViewSet)
+router.register(r'ventas', VentaViewSet)
+router.register(r'venta-items', VentaItemViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

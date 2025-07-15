@@ -57,6 +57,7 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:5174',  # Frontend Vite alternate
     'http://127.0.0.1:5173',
     'http://127.0.0.1:5174',
+    'http://localhost:3000',  # React default
 ]
 
 CORS_ALLOW_METHODS = [
@@ -74,7 +75,7 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',  # Temporalmente permitir acceso sin autenticación
     )
 }
 

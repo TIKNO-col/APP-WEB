@@ -9,9 +9,11 @@ from .serializers import (
     CustomTokenObtainPairSerializer, 
     ClienteSerializer,
     ProductoSerializer,
-    CategoriaSerializer
+    CategoriaSerializer,
+    VentaSerializer,
+    VentaItemSerializer
 )
-from .models import Cliente, Producto, Categoria
+from .models import Cliente, Producto, Categoria, Venta, VentaItem
 
 Usuario = get_user_model()
 
@@ -66,6 +68,66 @@ class PerfilUsuarioView(RetrieveUpdateAPIView):
             return Response({'detail': 'No tienes permiso para eliminar usuarios'}, 
                             status=status.HTTP_403_FORBIDDEN)
         return super().destroy(request, *args, **kwargs)
+
+class VentaViewSet(viewsets.ModelViewSet):
+    queryset = Venta.objects.all()
+    serializer_class = VentaSerializer
+    permission_classes = [permissions.AllowAny]  # Temporalmente permitir acceso sin autenticación
+
+    def get_queryset(self):
+        queryset = Venta.objects.all()
+        
+        # Filtrar por cliente si se proporciona
+        cliente_cedula = self.request.query_params.get('cliente', None)
+        if cliente_cedula:
+            queryset = queryset.filter(cliente_cedula=cliente_cedula)
+        
+        # Filtrar por fecha si se proporciona
+        fecha_inicio = self.request.query_params.get('fecha_inicio', None)
+        fecha_fin = self.request.query_params.get('fecha_fin', None)
+        
+        if fecha_inicio:
+            queryset = queryset.filter(created_at__date__gte=fecha_inicio)
+        if fecha_fin:
+            queryset = queryset.filter(created_at__date__lte=fecha_fin)
+        
+        return queryset.order_by('-created_at')
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                venta = serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            except Exception as e:
+                return Response(
+                    {'detail': str(e)}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, *args, **kwargs):
+        if request.user.rol != 'admin':
+            return Response(
+                {'detail': 'Solo los administradores pueden eliminar ventas'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return super().destroy(request, *args, **kwargs)
+
+class VentaItemViewSet(viewsets.ModelViewSet):
+    queryset = VentaItem.objects.all()
+    serializer_class = VentaItemSerializer
+    permission_classes = [permissions.AllowAny]  # Temporalmente permitir acceso sin autenticación
+
+    def get_queryset(self):
+        queryset = VentaItem.objects.all()
+        
+        # Filtrar por venta si se proporciona
+        venta_id = self.request.query_params.get('venta', None)
+        if venta_id:
+            queryset = queryset.filter(venta_id=venta_id)
+        
+        return queryset.order_by('-created_at')
 
 class ListaUsuariosView(ListAPIView):
     serializer_class = UsuarioSerializer
@@ -231,7 +293,7 @@ class ClienteViewSet(viewsets.ModelViewSet):
 class CategoriaViewSet(viewsets.ModelViewSet):
     queryset = Categoria.objects.all()
     serializer_class = CategoriaSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]  # Temporalmente permitir acceso sin autenticación
 
     def get_queryset(self):
         return Categoria.objects.all().order_by('nombre')
@@ -239,7 +301,7 @@ class CategoriaViewSet(viewsets.ModelViewSet):
 class ProductoViewSet(viewsets.ModelViewSet):
     queryset = Producto.objects.all()
     serializer_class = ProductoSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]  # Temporalmente permitir acceso sin autenticación
 
     def get_queryset(self):
         queryset = Producto.objects.all().order_by('-created_at')

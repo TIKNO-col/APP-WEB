@@ -54,10 +54,7 @@ class Cliente(models.Model):
 
 class Categoria(models.Model):
     id = models.BigAutoField(primary_key=True)
-    nombre = models.CharField(max_length=100)
-    descripcion = models.TextField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    nombre = models.TextField()
 
     class Meta:
         db_table = 'categorias'
@@ -83,3 +80,34 @@ class Producto(models.Model):
 
     def __str__(self):
         return f"{self.nombre} - ${self.precio}"
+
+class Venta(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    cliente_cedula = models.CharField(max_length=20, null=True, blank=True)  # Referencia directa por cédula
+    total = models.DecimalField(max_digits=10, decimal_places=2)
+    fecha = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'ventas'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Venta #{self.id} - {self.cliente_cedula} - ${self.total}"
+
+class VentaItem(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    venta_id = models.BigIntegerField(null=True, blank=True)  # Referencia directa por ID
+    producto_id = models.BigIntegerField(null=True, blank=True)  # Referencia directa por ID
+    cantidad = models.IntegerField()
+    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'detalles_venta'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Detalle venta #{self.venta_id} - Producto #{self.producto_id} x{self.cantidad}"

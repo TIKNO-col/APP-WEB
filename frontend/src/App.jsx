@@ -7,6 +7,7 @@ import Productos from './pages/Productos'
 import Ventas from './pages/Ventas'
 import Informes from './pages/Informes'
 import Usuarios from './pages/Usuarios'
+import TestAPI from './pages/TestAPI'
 
 const ProtectedRoute = ({ children }) => {
   const [loading, setLoading] = useState(true)
@@ -47,6 +48,7 @@ const App = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Auth />} />
+        <Route path="/test-api" element={<TestAPI />} />
         <Route
           path="/*"
           element={
@@ -61,6 +63,7 @@ const App = () => {
           <Route path="clientes" element={<Clientes />} />
           <Route path="ventas" element={<Ventas />} />
           <Route path="informes" element={<Informes />} />
+          <Route path="test-api" element={<TestAPI />} />
         </Route>
       </Routes>
     </BrowserRouter>
