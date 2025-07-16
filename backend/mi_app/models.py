@@ -80,6 +80,63 @@ class Producto(models.Model):
 
     def __str__(self):
         return f"{self.nombre} - ${self.precio}"
+    
+    def tiene_stock(self, cantidad=1):
+        """Verifica si hay suficiente stock disponible"""
+        return self.stock >= cantidad
+    
+    def reducir_stock(self, cantidad):
+        """Reduce el stock del producto"""
+        if self.tiene_stock(cantidad):
+            self.stock -= cantidad
+            self.save()
+            return True
+        return False
+    
+    def aumentar_stock(self, cantidad):
+        """Aumenta el stock del producto (para devoluciones)"""
+        self.stock += cantidad
+        self.save()
+
+class Carrito(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    session_id = models.CharField(max_length=255)  # Para usuarios no autenticados
+    usuario_id = models.UUIDField(null=True, blank=True)  # Para usuarios autenticados
+    producto_id = models.BigIntegerField()
+    cantidad = models.IntegerField(default=1)
+    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'carrito'
+        ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['session_id', 'producto_id'],
+                condition=models.Q(usuario_id__isnull=True),
+                name='unique_session_producto'
+            ),
+            models.UniqueConstraint(
+                fields=['usuario_id', 'producto_id'],
+                condition=models.Q(usuario_id__isnull=False),
+                name='unique_usuario_producto'
+            )
+        ]
+
+    def __str__(self):
+        return f"Carrito - Producto #{self.producto_id} x{self.cantidad}"
+    
+    def get_producto(self):
+        """Obtiene el producto asociado"""
+        try:
+            return Producto.objects.get(id=self.producto_id)
+        except Producto.DoesNotExist:
+            return None
+    
+    def get_subtotal(self):
+        """Calcula el subtotal del item"""
+        return self.cantidad * self.precio_unitario
 
 class Venta(models.Model):
     id = models.BigAutoField(primary_key=True)

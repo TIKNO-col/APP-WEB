@@ -46,7 +46,7 @@ const VentasPage = () => {
   const [clienteSeleccionado, setClienteSeleccionado] = useState(null);
   const [cedula, setCedula] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('');
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('Todas');
   const [productos, setProductos] = useState([]);
   const [categorias, setCategorias] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -87,7 +87,8 @@ const VentasPage = () => {
     const matchSearch = producto.nombre.toLowerCase().includes(searchTerm.toLowerCase());
     const matchCategoria = categoriaSeleccionada === 'Todas' || 
                           (producto.categoria_nombre && producto.categoria_nombre === categoriaSeleccionada);
-    return matchSearch && matchCategoria;
+    const hasStock = producto.stock >= 1;
+    return matchSearch && matchCategoria && hasStock;
   });
 
   const buscarCliente = async (cedulaBuscar) => {
@@ -111,17 +112,35 @@ const VentasPage = () => {
     const existeEnCarrito = carrito.find(item => item.id === producto.id);
     
     if (existeEnCarrito) {
-      // Si ya existe, aumentar cantidad
-      actualizarCantidad(producto.id, existeEnCarrito.cantidad + cantidad);
+      // Si ya existe, verificar que no exceda el stock
+      const nuevaCantidad = existeEnCarrito.cantidad + cantidad;
+      if (nuevaCantidad > producto.stock) {
+        setError(`No puedes agregar más de ${producto.stock} unidades de ${producto.nombre}. Ya tienes ${existeEnCarrito.cantidad} en el carrito.`);
+        return;
+      }
+      actualizarCantidad(producto.id, nuevaCantidad);
     } else {
-      // Si no existe, agregarlo con la cantidad especificada
+      // Si no existe, verificar que la cantidad no exceda el stock
+      if (cantidad > producto.stock) {
+        setError(`No puedes agregar ${cantidad} unidades de ${producto.nombre}. Solo hay ${producto.stock} disponibles.`);
+        return;
+      }
       setCarrito([...carrito, { ...producto, cantidad: cantidad }]);
     }
+    // Limpiar error si la operación fue exitosa
+    setError(null);
   };
 
   const actualizarCantidad = (id, nuevaCantidad) => {
     if (nuevaCantidad <= 0) {
       eliminarDelCarrito(id);
+      return;
+    }
+
+    // Encontrar el producto en el carrito para verificar el stock
+    const itemEnCarrito = carrito.find(item => item.id === id);
+    if (itemEnCarrito && nuevaCantidad > itemEnCarrito.stock) {
+      setError(`No puedes agregar más de ${itemEnCarrito.stock} unidades de ${itemEnCarrito.nombre}.`);
       return;
     }
 
@@ -131,6 +150,9 @@ const VentasPage = () => {
       }
       return item;
     }));
+    
+    // Limpiar error si la operación fue exitosa
+    setError(null);
   };
 
   const eliminarDelCarrito = (id) => {
@@ -268,14 +290,36 @@ const VentasPage = () => {
           {/* Lista de Productos */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredProductos.map(producto => (
-               <div key={producto.id} className="rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
+               <div key={producto.id} className="rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow flex flex-col h-full">
+                 {/* Imagen del producto */}
+                 <div className="w-full h-48 mb-3 bg-gray-100 rounded-lg overflow-hidden">
+                   {producto.imagen_url ? (
+                     <img
+                       src={producto.imagen_url}
+                       alt={producto.nombre}
+                       className="w-full h-full object-cover"
+                       onError={(e) => {
+                         e.target.style.display = 'none';
+                         e.target.nextSibling.style.display = 'flex';
+                       }}
+                     />
+                   ) : null}
+                   <div 
+                     className="w-full h-full flex items-center justify-center text-gray-400"
+                     style={{ display: producto.imagen_url ? 'none' : 'flex' }}
+                   >
+                     <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 20 20">
+                       <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                     </svg>
+                   </div>
+                 </div>
                  <h4 className="font-medium text-gray-900">{producto.nombre}</h4>
                  <p className="text-sm text-gray-600 mt-1">{producto.descripcion}</p>
                  <div className="flex items-center justify-between mt-2">
                    <span className="text-sm text-gray-500">Stock: {producto.stock}</span>
                    <span className="text-sm text-gray-500">{producto.categoria_nombre}</span>
                  </div>
-                 <div className="mt-3">
+                 <div className="mt-3 flex-grow">
                    <span className="text-lg font-bold text-green-600">${parseFloat(producto.precio).toFixed(2)}</span>
                  </div>
                  <div className="flex items-center gap-2 mt-3">

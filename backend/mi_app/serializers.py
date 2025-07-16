@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .models import Cliente, Categoria, Producto, Venta, VentaItem
+from .models import Cliente, Categoria, Producto, Venta, VentaItem, Carrito
 
 Usuario = get_user_model()
 
@@ -90,6 +90,60 @@ class ProductoSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("El stock no puede ser negativo")
         return value
 
+class CarritoSerializer(serializers.ModelSerializer):
+    producto_nombre = serializers.SerializerMethodField()
+    producto_precio = serializers.SerializerMethodField()
+    producto_imagen = serializers.SerializerMethodField()
+    producto_stock = serializers.SerializerMethodField()
+    subtotal = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Carrito
+        fields = ['id', 'session_id', 'usuario_id', 'producto_id', 'producto_nombre', 
+                 'producto_precio', 'producto_imagen', 'producto_stock', 'cantidad', 
+                 'precio_unitario', 'subtotal', 'created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at', 'subtotal', 'precio_unitario']
+        extra_kwargs = {
+            'usuario_id': {'required': False, 'allow_null': True},
+            'precio_unitario': {'required': False}
+        }
+
+    def get_producto_nombre(self, obj):
+        producto = obj.get_producto()
+        return producto.nombre if producto else None
+
+    def get_producto_precio(self, obj):
+        producto = obj.get_producto()
+        return producto.precio if producto else None
+
+    def get_producto_imagen(self, obj):
+        producto = obj.get_producto()
+        return producto.imagen_url if producto else None
+    
+    def get_producto_stock(self, obj):
+        producto = obj.get_producto()
+        return producto.stock if producto else 0
+    
+    def get_subtotal(self, obj):
+        return obj.get_subtotal()
+
+    def validate(self, data):
+        producto_id = data.get('producto_id')
+        cantidad = data.get('cantidad', 1)
+        
+        try:
+            producto = Producto.objects.get(id=producto_id)
+            if not producto.tiene_stock(cantidad):
+                raise serializers.ValidationError(
+                    f"Stock insuficiente. Solo hay {producto.stock} unidades disponibles."
+                )
+            # Establecer el precio unitario actual del producto
+            data['precio_unitario'] = producto.precio
+        except Producto.DoesNotExist:
+            raise serializers.ValidationError("El producto no existe.")
+        
+        return data
+
 class VentaItemSerializer(serializers.ModelSerializer):
     producto_nombre = serializers.SerializerMethodField()
     producto_precio = serializers.SerializerMethodField()
@@ -148,3 +202,8 @@ class VentaSerializer(serializers.ModelSerializer):
         # Los items se crearán por separado usando VentaItemSerializer
         venta = Venta.objects.create(**validated_data)
         return venta
+    
+    def validate_total(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("El total debe ser mayor que 0")
+        return value
