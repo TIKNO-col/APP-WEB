@@ -1,88 +1,200 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Download } from 'lucide-react';
-
-const mockVentas = [
-  {
-    id: '#001',
-    fecha: '2024-01-15',
-    cliente: 'Sofía Mendoza',
-    producto: 'Laptop Pro 15',
-    cantidad: 1,
-    precio: 1200,
-    total: 1200
-  },
-  {
-    id: '#002',
-    fecha: '2024-01-16',
-    cliente: 'Diego Herrera',
-    producto: 'Smartphone X20',
-    cantidad: 2,
-    precio: 800,
-    total: 1600
-  },
-  {
-    id: '#003',
-    fecha: '2024-01-17',
-    cliente: 'Luciana Torres',
-    producto: 'Tablet 10"',
-    cantidad: 1,
-    precio: 299.99,
-    total: 299.99
-  }
-];
+import { makeAuthenticatedRequest } from '../services/auth';
 
 const InformesPage = () => {
   const [tipoInforme, setTipoInforme] = useState('fecha');
+  const [ventas, setVentas] = useState([]);
+  const [clientes, setClientes] = useState([]);
+  const [productos, setProductos] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
   const [clienteBusqueda, setClienteBusqueda] = useState('');
   const [productoBusqueda, setProductoBusqueda] = useState('');
 
-  const clientes = [...new Set(mockVentas.map(venta => venta.cliente))];
-  const productos = [...new Set(mockVentas.map(venta => venta.producto))];
+  // Cargar datos desde la API
+  useEffect(() => {
+    cargarDatos();
+  }, []);
+
+  const cargarDatos = async () => {
+    setLoading(true);
+    try {
+      // Cargar ventas
+      const ventasResponse = await makeAuthenticatedRequest('/ventas/');
+      if (ventasResponse.ok) {
+        const ventasData = await ventasResponse.json();
+        const ventasFormateadas = ventasData.map(venta => {
+          // Formatear fecha de manera segura
+          let fechaFormateada = 'Fecha no disponible';
+          try {
+            if (venta.fecha) {
+              const fecha = new Date(venta.fecha);
+              if (!isNaN(fecha.getTime())) {
+                fechaFormateada = fecha.toLocaleDateString('es-ES', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit'
+                });
+              }
+            }
+          } catch (error) {
+            console.warn('Error formateando fecha:', venta.fecha, error);
+          }
+          
+          return {
+            id: venta.id,
+            fecha: fechaFormateada,
+            cliente: venta.cliente_nombre || 'Cliente no especificado',
+            total: parseFloat(venta.total),
+            items: venta.items || []
+          };
+        });
+        setVentas(ventasFormateadas);
+      }
+      
+      // Cargar clientes
+      const clientesResponse = await makeAuthenticatedRequest('/clientes/');
+      if (clientesResponse.ok) {
+        const clientesData = await clientesResponse.json();
+        setClientes(clientesData);
+      }
+      
+      // Cargar productos
+      const productosResponse = await makeAuthenticatedRequest('/productos/');
+      if (productosResponse.ok) {
+        const productosData = await productosResponse.json();
+        setProductos(productosData);
+      }
+      
+    } catch (error) {
+      console.error('Error al cargar datos:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filtrarVentas = () => {
+    let ventasFiltradas = [];
+    
     switch (tipoInforme) {
       case 'fecha':
-        return mockVentas.filter(venta => {
-          const cumpleFechaInicio = !fechaInicio || venta.fecha >= fechaInicio;
-          const cumpleFechaFin = !fechaFin || venta.fecha <= fechaFin;
+        ventasFiltradas = ventas.filter(venta => {
+          if (!fechaInicio && !fechaFin) return true;
+          
+          // Si la fecha no está disponible, excluir de los resultados
+          if (venta.fecha === 'Fecha no disponible') return false;
+          
+          // Convertir la fecha de venta a formato YYYY-MM-DD para comparación
+          let fechaVenta;
+          try {
+            // Si venta.fecha ya está en formato DD/MM/YYYY, convertirlo
+            if (venta.fecha.includes('/')) {
+              const [dia, mes, año] = venta.fecha.split('/');
+              fechaVenta = `${año}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+            } else {
+              // Si ya está en formato ISO, extraer solo la fecha
+              fechaVenta = venta.fecha.split('T')[0];
+            }
+          } catch (error) {
+            console.warn('Error procesando fecha:', venta.fecha, error);
+            return false;
+          }
+          
+          const cumpleFechaInicio = !fechaInicio || fechaVenta >= fechaInicio;
+          const cumpleFechaFin = !fechaFin || fechaVenta <= fechaFin;
           return cumpleFechaInicio && cumpleFechaFin;
         });
+        break;
       case 'cliente':
-        return mockVentas.filter(venta =>
+        ventasFiltradas = ventas.filter(venta =>
           venta.cliente.toLowerCase().includes(clienteBusqueda.toLowerCase())
         );
+        break;
       case 'producto':
-        return mockVentas.filter(venta =>
-          venta.producto.toLowerCase().includes(productoBusqueda.toLowerCase())
-        );
+        // Para productos, necesitamos expandir los items de cada venta
+        ventasFiltradas = [];
+        ventas.forEach(venta => {
+          venta.items.forEach(item => {
+            const producto = productos.find(p => p.id === item.producto);
+            if (producto && producto.nombre.toLowerCase().includes(productoBusqueda.toLowerCase())) {
+              ventasFiltradas.push({
+                id: venta.id,
+                fecha: venta.fecha,
+                cliente: venta.cliente,
+                producto: producto.nombre,
+                cantidad: item.cantidad,
+                precio: parseFloat(item.precio_unitario),
+                total: parseFloat(item.subtotal)
+              });
+            }
+          });
+        });
+        break;
       default:
-        return mockVentas;
+        ventasFiltradas = ventas;
     }
+    
+    return ventasFiltradas;
   };
 
   const ventasFiltradas = filtrarVentas();
 
   const calcularTotales = () => {
-    return ventasFiltradas.reduce(
-      (acc, venta) => {
-        acc.cantidadTotal += venta.cantidad;
-        acc.montoTotal += venta.total;
-        return acc;
-      },
-      { cantidadTotal: 0, montoTotal: 0 }
-    );
+    if (tipoInforme === 'producto') {
+      return ventasFiltradas.reduce(
+        (acc, item) => {
+          acc.cantidadTotal += item.cantidad || 0;
+          acc.montoTotal += item.total || 0;
+          return acc;
+        },
+        { cantidadTotal: 0, montoTotal: 0 }
+      );
+    } else {
+      return ventasFiltradas.reduce(
+        (acc, venta) => {
+          acc.cantidadTotal += 1; // Número de ventas
+          acc.montoTotal += venta.total || 0;
+          return acc;
+        },
+        { cantidadTotal: 0, montoTotal: 0 }
+      );
+    }
   };
 
   const { cantidadTotal, montoTotal } = calcularTotales();
 
   const generarReporte = () => {
-    console.log('Generando reporte:', { tipoInforme, ventasFiltradas });
+    cargarDatos(); // Recargar datos para asegurar que estén actualizados
   };
 
   const descargarPDF = () => {
-    console.log('Descargando PDF:', ventasFiltradas);
+    // Crear contenido CSV para descarga
+    let csvContent = '';
+    let headers = '';
+    
+    if (tipoInforme === 'producto') {
+      headers = 'ID Venta,Fecha,Cliente,Producto,Cantidad,Precio Unitario,Total\n';
+      csvContent = ventasFiltradas.map(item => 
+        `${item.id},${item.fecha},"${item.cliente}","${item.producto}",${item.cantidad},${item.precio},${item.total}`
+      ).join('\n');
+    } else {
+      headers = 'ID,Fecha,Cliente,Total\n';
+      csvContent = ventasFiltradas.map(venta => 
+        `${venta.id},${venta.fecha},"${venta.cliente}",${venta.total}`
+      ).join('\n');
+    }
+    
+    const blob = new Blob([headers + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `reporte_${tipoInforme}_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -183,49 +295,86 @@ const InformesPage = () => {
         )}
       </div>
 
-      {/* Vista previa del reporte */}
-      <div className="mb-6">
-        <h3 className="mb-4 text-lg font-medium text-gray-900">Vista previa del reporte</h3>
-        <div className="rounded-lg border border-gray-200 bg-white">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-gray-500">
-              <thead className="bg-gray-50 text-xs uppercase text-gray-700">
-                <tr>
-                  <th scope="col" className="px-6 py-3">ID</th>
-                  <th scope="col" className="px-6 py-3">Fecha</th>
-                  <th scope="col" className="px-6 py-3">Cliente</th>
-                  <th scope="col" className="px-6 py-3">Producto</th>
-                  <th scope="col" className="px-6 py-3">Cantidad</th>
-                  <th scope="col" className="px-6 py-3">Precio</th>
-                  <th scope="col" className="px-6 py-3">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ventasFiltradas.map((venta) => (
-                  <tr key={venta.id} className="border-b bg-white hover:bg-gray-50">
-                    <td className="px-6 py-4 font-medium text-gray-900">{venta.id}</td>
-                    <td className="px-6 py-4">{venta.fecha}</td>
-                    <td className="px-6 py-4">{venta.cliente}</td>
-                    <td className="px-6 py-4">{venta.producto}</td>
-                    <td className="px-6 py-4">{venta.cantidad}</td>
-                    <td className="px-6 py-4">${venta.precio.toFixed(2)}</td>
-                    <td className="px-6 py-4">${venta.total.toFixed(2)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      {/* Resumen de totales */}
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="rounded-lg bg-blue-50 p-4">
+          <h4 className="text-sm font-medium text-blue-900">
+            {tipoInforme === 'producto' ? 'Cantidad Total' : 'Número de Ventas'}
+          </h4>
+          <p className="text-2xl font-bold text-blue-600">{cantidadTotal}</p>
+        </div>
+        <div className="rounded-lg bg-green-50 p-4">
+          <h4 className="text-sm font-medium text-green-900">Monto Total</h4>
+          <p className="text-2xl font-bold text-green-600">${montoTotal.toFixed(2)}</p>
         </div>
       </div>
 
-      {/* Botón Descargar PDF */}
+      {/* Vista previa del reporte */}
+      <div className="mb-6">
+        <h3 className="mb-4 text-lg font-medium text-gray-900">Vista previa del reporte</h3>
+        {loading ? (
+          <div className="flex justify-center py-8">
+            <div className="text-gray-500">Cargando datos...</div>
+          </div>
+        ) : (
+          <div className="rounded-lg border border-gray-200 bg-white">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm text-gray-500">
+                <thead className="bg-gray-50 text-xs uppercase text-gray-700">
+                  <tr>
+                    <th scope="col" className="px-6 py-3">ID</th>
+                    <th scope="col" className="px-6 py-3">Fecha</th>
+                    <th scope="col" className="px-6 py-3">Cliente</th>
+                    {tipoInforme === 'producto' && (
+                      <>
+                        <th scope="col" className="px-6 py-3">Producto</th>
+                        <th scope="col" className="px-6 py-3">Cantidad</th>
+                        <th scope="col" className="px-6 py-3">Precio</th>
+                      </>
+                    )}
+                    <th scope="col" className="px-6 py-3">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ventasFiltradas.length === 0 ? (
+                    <tr>
+                      <td colSpan={tipoInforme === 'producto' ? 7 : 4} className="px-6 py-8 text-center text-gray-500">
+                        No se encontraron resultados
+                      </td>
+                    </tr>
+                  ) : (
+                    ventasFiltradas.map((item, index) => (
+                      <tr key={`${item.id}-${index}`} className="border-b bg-white hover:bg-gray-50">
+                        <td className="px-6 py-4 font-medium text-gray-900">{item.id}</td>
+                        <td className="px-6 py-4">{item.fecha}</td>
+                        <td className="px-6 py-4">{item.cliente}</td>
+                        {tipoInforme === 'producto' && (
+                          <>
+                            <td className="px-6 py-4">{item.producto}</td>
+                            <td className="px-6 py-4">{item.cantidad}</td>
+                            <td className="px-6 py-4">${item.precio?.toFixed(2) || '0.00'}</td>
+                          </>
+                        )}
+                        <td className="px-6 py-4">${item.total?.toFixed(2) || '0.00'}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Botón Descargar CSV */}
       <div className="flex justify-end">
         <button
           onClick={descargarPDF}
-          className="flex items-center rounded-lg bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700"
+          disabled={ventasFiltradas.length === 0 || loading}
+          className="flex items-center rounded-lg bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
           <Download className="mr-2 h-4 w-4" />
-          Descargar PDF
+          Descargar CSV ({ventasFiltradas.length} registros)
         </button>
       </div>
     </div>
