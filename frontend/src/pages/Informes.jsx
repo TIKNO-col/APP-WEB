@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Download } from 'lucide-react';
 import { makeAuthenticatedRequest } from '../services/auth';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const InformesPage = () => {
   const [tipoInforme, setTipoInforme] = useState('fecha');
@@ -218,22 +220,86 @@ const InformesPage = () => {
   };
 
   const descargarPDF = () => {
-    // Crear contenido CSV para descarga
-    // Todos los tipos de informe ahora tienen la misma estructura de datos expandidos
-    const headers = 'ID Venta,Fecha,Cliente,Producto,Cantidad,Precio Unitario,Total\n';
-    const csvContent = ventasFiltradas.map(item => 
-      `${item.id},${item.fecha},"${item.cliente}","${item.producto}",${item.cantidad},${item.precio},${item.total}`
-    ).join('\n');
-    
-    const blob = new Blob([headers + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `reporte_${tipoInforme}_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      console.log('Iniciando generación de PDF...');
+      const doc = new jsPDF();
+      const { cantidadTotal, montoTotal } = calcularTotales();
+      
+      console.log('Datos calculados:', { cantidadTotal, montoTotal, ventasFiltradas: ventasFiltradas.length });
+      
+      // Configurar el título del documento
+      const titulo = `Reporte por ${tipoInforme.charAt(0).toUpperCase() + tipoInforme.slice(1)}`;
+      doc.setFontSize(18);
+      doc.text(titulo, 14, 22);
+      
+      // Agregar fecha de generación
+      doc.setFontSize(11);
+      doc.text(`Generado el: ${new Date().toLocaleDateString('es-ES')}`, 14, 32);
+      
+      // Agregar resumen
+      const tipoConteo = tipoInforme === 'producto' ? 'Número de Items' : 'Número de Ventas';
+      doc.text(`${tipoConteo}: ${cantidadTotal}`, 14, 42);
+      doc.text(`Monto Total: $${montoTotal.toFixed(2)}`, 14, 52);
+      
+      // Verificar si hay datos para la tabla
+      if (ventasFiltradas.length === 0) {
+        doc.text('No hay datos para mostrar', 14, 70);
+        doc.save(`reporte_${tipoInforme}_${new Date().toISOString().split('T')[0]}.pdf`);
+        return;
+      }
+      
+      // Configurar las columnas de la tabla
+      const columns = [
+        { header: 'ID', dataKey: 'id' },
+        { header: 'Fecha', dataKey: 'fecha' },
+        { header: 'Cliente', dataKey: 'cliente' },
+        { header: 'Producto', dataKey: 'producto' },
+        { header: 'Cantidad', dataKey: 'cantidad' },
+        { header: 'Precio', dataKey: 'precio' },
+        { header: 'Total', dataKey: 'total' }
+      ];
+      
+      // Preparar los datos para la tabla
+      const data = ventasFiltradas.map(item => ({
+        id: item.id || '',
+        fecha: item.fecha || '',
+        cliente: item.cliente || '',
+        producto: item.producto || '',
+        cantidad: item.cantidad || 0,
+        precio: `$${item.precio?.toFixed(2) || '0.00'}`,
+        total: `$${item.total?.toFixed(2) || '0.00'}`
+      }));
+      
+      console.log('Datos preparados para la tabla:', data.slice(0, 2)); // Mostrar solo los primeros 2 para debug
+      
+      // Generar la tabla
+       autoTable(doc, {
+         columns: columns,
+         body: data,
+         startY: 60,
+         styles: {
+           fontSize: 8,
+           cellPadding: 3
+         },
+         headStyles: {
+           fillColor: [71, 85, 105], // Color gris oscuro
+           textColor: 255,
+           fontStyle: 'bold'
+         },
+         alternateRowStyles: {
+           fillColor: [249, 250, 251] // Color gris claro alternado
+         },
+         margin: { top: 60 }
+       });
+      
+      console.log('PDF generado exitosamente');
+      
+      // Descargar el PDF
+      doc.save(`reporte_${tipoInforme}_${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (error) {
+      console.error('Error al generar PDF:', error);
+      alert('Error al generar el PDF. Por favor, revisa la consola para más detalles.');
+    }
   };
 
   return (
@@ -397,7 +463,7 @@ const InformesPage = () => {
         )}
       </div>
 
-      {/* Botón Descargar CSV */}
+      {/* Botón Descargar PDF */}
       <div className="flex justify-end">
         <button
           onClick={descargarPDF}
@@ -405,7 +471,7 @@ const InformesPage = () => {
           className="flex items-center rounded-lg bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
           <Download className="mr-2 h-4 w-4" />
-          Descargar CSV ({ventasFiltradas.length} registros)
+          Descargar PDF ({ventasFiltradas.length} registros)
         </button>
       </div>
     </div>
