@@ -80,56 +80,107 @@ const InformesPage = () => {
     
     switch (tipoInforme) {
       case 'fecha':
-        ventasFiltradas = ventas.filter(venta => {
-          if (!fechaInicio && !fechaFin) return true;
-          
-          // Si la fecha no está disponible, excluir de los resultados
-          if (venta.fecha === 'Fecha no disponible') return false;
-          
-          // Convertir la fecha de venta a formato YYYY-MM-DD para comparación
-          let fechaVenta;
-          try {
-            // Si venta.fecha ya está en formato DD/MM/YYYY, convertirlo
-            if (venta.fecha.includes('/')) {
-              const [dia, mes, año] = venta.fecha.split('/');
-              fechaVenta = `${año}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
-            } else {
-              // Si ya está en formato ISO, extraer solo la fecha
-              fechaVenta = venta.fecha.split('T')[0];
-            }
-          } catch (error) {
-            console.warn('Error procesando fecha:', venta.fecha, error);
-            return false;
-          }
-          
-          const cumpleFechaInicio = !fechaInicio || fechaVenta >= fechaInicio;
-          const cumpleFechaFin = !fechaFin || fechaVenta <= fechaFin;
-          return cumpleFechaInicio && cumpleFechaFin;
-        });
-        break;
-      case 'cliente':
-        ventasFiltradas = ventas.filter(venta =>
-          venta.cliente.toLowerCase().includes(clienteBusqueda.toLowerCase())
-        );
-        break;
-      case 'producto':
-        // Para productos, necesitamos expandir los items de cada venta
+        // Expandir items para filtro por fecha sin filtro por producto
         ventasFiltradas = [];
         ventas.forEach(venta => {
-          venta.items.forEach(item => {
-            const producto = productos.find(p => p.id === item.producto);
-            if (producto && producto.nombre.toLowerCase().includes(productoBusqueda.toLowerCase())) {
+          // Verificar filtro de fecha
+          let cumpleFiltroFecha = true;
+          if (fechaInicio || fechaFin) {
+            if (venta.fecha === 'Fecha no disponible') {
+              cumpleFiltroFecha = false;
+            } else {
+              try {
+                let fechaVenta;
+                if (venta.fecha.includes('/')) {
+                  const [dia, mes, año] = venta.fecha.split('/');
+                  fechaVenta = `${año}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+                } else {
+                  fechaVenta = venta.fecha.split('T')[0];
+                }
+                const cumpleFechaInicio = !fechaInicio || fechaVenta >= fechaInicio;
+                const cumpleFechaFin = !fechaFin || fechaVenta <= fechaFin;
+                cumpleFiltroFecha = cumpleFechaInicio && cumpleFechaFin;
+              } catch (error) {
+                cumpleFiltroFecha = false;
+              }
+            }
+          }
+          
+          if (cumpleFiltroFecha && venta.items && venta.items.length > 0) {
+            venta.items.forEach(item => {
+              const producto = productos.find(p => p.id === item.producto_id);
+              
+              const subtotal = item.cantidad * parseFloat(item.precio_unitario);
               ventasFiltradas.push({
                 id: venta.id,
                 fecha: venta.fecha,
                 cliente: venta.cliente,
-                producto: producto.nombre,
+                producto: item.producto_nombre || (producto ? producto.nombre : 'Producto no encontrado'),
                 cantidad: item.cantidad,
                 precio: parseFloat(item.precio_unitario),
-                total: parseFloat(item.subtotal)
+                total: subtotal
               });
-            }
-          });
+            });
+          }
+        });
+        break;
+        
+      case 'cliente':
+        // Expandir items para filtro por cliente sin filtro por producto
+        ventasFiltradas = [];
+        ventas.forEach(venta => {
+          // Verificar filtro de cliente
+          const cumpleFiltroCliente = !clienteBusqueda || 
+            venta.cliente.toLowerCase().includes(clienteBusqueda.toLowerCase());
+          
+          if (cumpleFiltroCliente && venta.items && venta.items.length > 0) {
+            venta.items.forEach(item => {
+              const producto = productos.find(p => p.id === item.producto_id);
+              
+              const subtotal = item.cantidad * parseFloat(item.precio_unitario);
+              ventasFiltradas.push({
+                id: venta.id,
+                fecha: venta.fecha,
+                cliente: venta.cliente,
+                producto: item.producto_nombre || (producto ? producto.nombre : 'Producto no encontrado'),
+                cantidad: item.cantidad,
+                precio: parseFloat(item.precio_unitario),
+                total: subtotal
+              });
+            });
+          }
+        });
+        break;
+        
+      case 'producto':
+        // Para productos, necesitamos expandir los items de cada venta
+        ventasFiltradas = [];
+        ventas.forEach(venta => {
+          if (venta.items && venta.items.length > 0) {
+            venta.items.forEach(item => {
+              // Buscar el producto por ID
+              const producto = productos.find(p => p.id === item.producto_id);
+              
+              // Si no hay búsqueda específica o el producto coincide con la búsqueda
+              if (!productoBusqueda || 
+                  (producto && producto.nombre.toLowerCase().includes(productoBusqueda.toLowerCase())) ||
+                  (item.producto_nombre && item.producto_nombre.toLowerCase().includes(productoBusqueda.toLowerCase()))) {
+                
+                // Calcular el subtotal (cantidad * precio_unitario)
+                const subtotal = item.cantidad * parseFloat(item.precio_unitario);
+                
+                ventasFiltradas.push({
+                  id: venta.id,
+                  fecha: venta.fecha,
+                  cliente: venta.cliente,
+                  producto: item.producto_nombre || (producto ? producto.nombre : 'Producto no encontrado'),
+                  cantidad: item.cantidad,
+                  precio: parseFloat(item.precio_unitario),
+                  total: subtotal
+                });
+              }
+            });
+          }
         });
         break;
       default:
@@ -143,23 +194,20 @@ const InformesPage = () => {
 
   const calcularTotales = () => {
     if (tipoInforme === 'producto') {
-      return ventasFiltradas.reduce(
-        (acc, item) => {
-          acc.cantidadTotal += item.cantidad || 0;
-          acc.montoTotal += item.total || 0;
-          return acc;
-        },
-        { cantidadTotal: 0, montoTotal: 0 }
-      );
+      // Para reporte por producto, contar número de items (no sumar cantidades)
+      const montoTotal = ventasFiltradas.reduce((acc, item) => acc + (item.total || 0), 0);
+      return {
+        cantidadTotal: ventasFiltradas.length,
+        montoTotal: montoTotal
+      };
     } else {
-      return ventasFiltradas.reduce(
-        (acc, venta) => {
-          acc.cantidadTotal += 1; // Número de ventas
-          acc.montoTotal += venta.total || 0;
-          return acc;
-        },
-        { cantidadTotal: 0, montoTotal: 0 }
-      );
+      // Para reportes por fecha y cliente, contar ventas únicas
+      const ventasUnicas = new Set(ventasFiltradas.map(item => item.id));
+      const montoTotal = ventasFiltradas.reduce((acc, item) => acc + (item.total || 0), 0);
+      return {
+        cantidadTotal: ventasUnicas.size,
+        montoTotal: montoTotal
+      };
     }
   };
 
@@ -171,20 +219,11 @@ const InformesPage = () => {
 
   const descargarPDF = () => {
     // Crear contenido CSV para descarga
-    let csvContent = '';
-    let headers = '';
-    
-    if (tipoInforme === 'producto') {
-      headers = 'ID Venta,Fecha,Cliente,Producto,Cantidad,Precio Unitario,Total\n';
-      csvContent = ventasFiltradas.map(item => 
-        `${item.id},${item.fecha},"${item.cliente}","${item.producto}",${item.cantidad},${item.precio},${item.total}`
-      ).join('\n');
-    } else {
-      headers = 'ID,Fecha,Cliente,Total\n';
-      csvContent = ventasFiltradas.map(venta => 
-        `${venta.id},${venta.fecha},"${venta.cliente}",${venta.total}`
-      ).join('\n');
-    }
+    // Todos los tipos de informe ahora tienen la misma estructura de datos expandidos
+    const headers = 'ID Venta,Fecha,Cliente,Producto,Cantidad,Precio Unitario,Total\n';
+    const csvContent = ventasFiltradas.map(item => 
+      `${item.id},${item.fecha},"${item.cliente}","${item.producto}",${item.cantidad},${item.precio},${item.total}`
+    ).join('\n');
     
     const blob = new Blob([headers + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -299,7 +338,7 @@ const InformesPage = () => {
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="rounded-lg bg-blue-50 p-4">
           <h4 className="text-sm font-medium text-blue-900">
-            {tipoInforme === 'producto' ? 'Cantidad Total' : 'Número de Ventas'}
+            {tipoInforme === 'producto' ? 'Número de Items' : 'Número de Ventas'}
           </h4>
           <p className="text-2xl font-bold text-blue-600">{cantidadTotal}</p>
         </div>
@@ -325,20 +364,16 @@ const InformesPage = () => {
                     <th scope="col" className="px-6 py-3">ID</th>
                     <th scope="col" className="px-6 py-3">Fecha</th>
                     <th scope="col" className="px-6 py-3">Cliente</th>
-                    {tipoInforme === 'producto' && (
-                      <>
-                        <th scope="col" className="px-6 py-3">Producto</th>
-                        <th scope="col" className="px-6 py-3">Cantidad</th>
-                        <th scope="col" className="px-6 py-3">Precio</th>
-                      </>
-                    )}
+                    <th scope="col" className="px-6 py-3">Producto</th>
+                    <th scope="col" className="px-6 py-3">Cantidad</th>
+                    <th scope="col" className="px-6 py-3">Precio</th>
                     <th scope="col" className="px-6 py-3">Total</th>
                   </tr>
                 </thead>
                 <tbody>
                   {ventasFiltradas.length === 0 ? (
                     <tr>
-                      <td colSpan={tipoInforme === 'producto' ? 7 : 4} className="px-6 py-8 text-center text-gray-500">
+                      <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
                         No se encontraron resultados
                       </td>
                     </tr>
@@ -348,13 +383,9 @@ const InformesPage = () => {
                         <td className="px-6 py-4 font-medium text-gray-900">{item.id}</td>
                         <td className="px-6 py-4">{item.fecha}</td>
                         <td className="px-6 py-4">{item.cliente}</td>
-                        {tipoInforme === 'producto' && (
-                          <>
-                            <td className="px-6 py-4">{item.producto}</td>
-                            <td className="px-6 py-4">{item.cantidad}</td>
-                            <td className="px-6 py-4">${item.precio?.toFixed(2) || '0.00'}</td>
-                          </>
-                        )}
+                        <td className="px-6 py-4">{item.producto}</td>
+                        <td className="px-6 py-4">{item.cantidad}</td>
+                        <td className="px-6 py-4">${item.precio?.toFixed(2) || '0.00'}</td>
                         <td className="px-6 py-4">${item.total?.toFixed(2) || '0.00'}</td>
                       </tr>
                     ))

@@ -182,7 +182,7 @@ class VentaItemSerializer(serializers.ModelSerializer):
         return value
 
 class VentaSerializer(serializers.ModelSerializer):
-    items = VentaItemSerializer(many=True, read_only=True)
+    items = serializers.SerializerMethodField()
     cliente_nombre = serializers.SerializerMethodField()
 
     class Meta:
@@ -190,6 +190,11 @@ class VentaSerializer(serializers.ModelSerializer):
         fields = ['id', 'cliente_cedula', 'cliente_nombre', 'total', 'fecha', 
                  'items', 'created_at', 'updated_at']
         read_only_fields = ['created_at', 'updated_at']
+
+    def get_items(self, obj):
+        # Obtener los items de venta manualmente usando venta_id
+        items = VentaItem.objects.filter(venta_id=obj.id)
+        return VentaItemSerializer(items, many=True).data
 
     def get_cliente_nombre(self, obj):
         try:
