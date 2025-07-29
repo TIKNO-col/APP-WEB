@@ -1,17 +1,40 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Users, ShoppingCart, FileText, BarChart2, UserCircle, LogOut } from 'lucide-react';
 import { logout } from '../services/auth';
+import { useState, useEffect } from 'react';
+import { makeAuthenticatedRequest } from '../services/auth';
 
 const Sidebar = () => {
   const location = useLocation();
+  const [userRole, setUserRole] = useState(null);
 
-  const menuItems = [
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await makeAuthenticatedRequest('/usuarios/perfil/', { method: 'GET' });
+        const userData = await response.json();
+        setUserRole(userData.rol);
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      }
+    };
+    fetchUserProfile();
+  }, []);
+
+  const allMenuItems = [
     { name: 'Clientes', icon: Users, path: '/clientes' },
     { name: 'Productos', icon: ShoppingCart, path: '/productos' },
     { name: 'Ventas', icon: FileText, path: '/ventas' },
-    { name: 'Informes', icon: BarChart2, path: '/informes' },
+    { name: 'Informes', icon: BarChart2, path: '/informes', adminOnly: true },
     { name: 'Usuarios', icon: UserCircle, path: '/usuarios' },
   ];
+
+  const menuItems = allMenuItems.filter(item => {
+    if (item.adminOnly && userRole === 'Usuario') {
+      return false;
+    }
+    return true;
+  });
 
   const handleLogout = () => {
     logout();

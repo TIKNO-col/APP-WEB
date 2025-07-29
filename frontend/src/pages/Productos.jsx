@@ -3,6 +3,7 @@ import { Plus } from 'lucide-react';
 import ProductoModal from '../components/ProductoModal';
 import ProductosTable from '../components/ProductosTable';
 import { supabase } from '../supabase';
+import { makeAuthenticatedRequest } from '../services/auth';
 
 const Productos = () => {
   const [productos, setProductos] = useState([]);
@@ -10,10 +11,22 @@ const Productos = () => {
   const [selectedProducto, setSelectedProducto] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
     fetchProductos();
+    fetchUserProfile();
   }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      const response = await makeAuthenticatedRequest('/usuarios/perfil/', { method: 'GET' });
+      const userData = await response.json();
+      setUserRole(userData.rol);
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
 
   const fetchProductos = async () => {
     try {
@@ -68,13 +81,15 @@ const Productos = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Productos</h1>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-        >
-          <Plus className="h-5 w-5" />
-          Nuevo Producto
-        </button>
+        {userRole && userRole !== 'Usuario' && (
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          >
+            <Plus className="h-5 w-5" />
+            Nuevo Producto
+          </button>
+        )}
       </div>
 
       {error && (
@@ -88,12 +103,14 @@ const Productos = () => {
         onEdit={handleEdit}
         onDelete={handleDelete}
         loading={loading}
+        userRole={userRole}
       />
 
       <ProductoModal
         isOpen={isModalOpen}
         onClose={handleModalClose}
         producto={selectedProducto}
+        readOnly={userRole === 'Usuario'}
       />
     </div>
   );

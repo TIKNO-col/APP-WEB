@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import ProductoModal from './ProductoModal';
 import { Search, MoreVertical, AlertTriangle } from 'lucide-react';
 import { supabase } from '../supabase';
-import { Edit2, Trash2 } from 'lucide-react';
+import { Edit2, Trash2, Eye } from 'lucide-react';
 
 const categorias = [
   'Todas',
@@ -218,7 +218,7 @@ const ProductosTableContainer = () => {
   );
 };
 
-const ProductosTable = ({ productos, onEdit, onDelete, loading }) => {
+const ProductosTable = ({ productos, onEdit, onDelete, loading, userRole }) => {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
   const sortedProductos = [...productos].sort((a, b) => {
@@ -346,22 +346,34 @@ const ProductosTable = ({ productos, onEdit, onDelete, loading }) => {
                   {producto.categoria?.nombre || 'Sin categoría'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => onEdit(producto)}
-                      className="text-indigo-600 hover:text-indigo-900"
-                      title="Editar"
-                    >
-                      <Edit2 className="h-5 w-5" />
-                    </button>
-                    <button
-                      onClick={() => onDelete(producto)}
-                      className="text-red-600 hover:text-red-900"
-                      title="Eliminar"
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </button>
-                  </div>
+                  {userRole && userRole !== 'Usuario' ? (
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => onEdit(producto)}
+                        className="text-indigo-600 hover:text-indigo-900"
+                        title="Editar"
+                      >
+                        <Edit2 className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => onDelete(producto)}
+                        className="text-red-600 hover:text-red-900"
+                        title="Eliminar"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => onEdit(producto)}
+                        className="text-blue-600 hover:text-blue-900"
+                        title="Ver detalles"
+                      >
+                        <Eye className="h-5 w-5" />
+                      </button>
+                    </div>
+                  )}
                 </td>
               </tr>
             ))

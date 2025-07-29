@@ -12,7 +12,7 @@ class Usuario(AbstractUser):
     username = models.CharField(max_length=150, unique=True, default='', db_index=True)
     first_name = models.CharField(max_length=150, default='')
     last_name = models.CharField(max_length=150, default='')
-    rol = models.CharField(max_length=50, default='usuario', db_index=True)
+    rol = models.CharField(max_length=50, default='Usuario', db_index=True)
     zona_acceso = models.CharField(max_length=50, default='general', db_index=True)
     is_active = models.BooleanField(default=True, db_index=True)
     created_at = models.DateTimeField(default=timezone.now, db_index=True)

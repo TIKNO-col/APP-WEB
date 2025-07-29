@@ -33,7 +33,7 @@ const UsuarioList = () => {
       if (!usuariosResponse.ok) throw new Error(usuariosData.detail || 'Error al obtener los usuarios');
 
       setCurrentUser(perfilData);
-      setIsAdmin(perfilData.rol === 'admin');
+      setIsAdmin(perfilData.rol === 'admin' || perfilData.rol === 'staff');
       setUsuarios(usuariosData);
       setError(null);
     } catch (error) {
@@ -184,13 +184,15 @@ const UsuarioList = () => {
       <div className="px-6 py-4 border-b border-gray-200">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-800">Lista de Usuarios</h2>
-          <button
-            onClick={handleCreate}
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center"
-          >
-            <Plus className="mr-2" size={16} />
-            Nuevo Usuario
-          </button>
+          {isAdmin && (
+            <button
+              onClick={handleCreate}
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center"
+            >
+              <Plus className="mr-2" size={16} />
+              Nuevo Usuario
+            </button>
+          )}
         </div>
         
         <div className="mt-4 relative">
@@ -264,8 +266,9 @@ const UsuarioList = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                       usuario.rol === 'admin' ? 'bg-red-100 text-red-800' :
-                      usuario.rol === 'staff' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-green-100 text-green-800'
+                usuario.rol === 'staff' ? 'bg-yellow-100 text-yellow-800' :
+                usuario.rol === 'Usuario' ? 'bg-green-100 text-green-800' :
+                'bg-gray-100 text-gray-800'
                     }`}>
                       {usuario.rol}
                     </span>
@@ -320,6 +323,8 @@ const UsuarioList = () => {
           mode={modalMode}
           onClose={handleModalClose}
           onSave={handleModalSave}
+          isEditingSelf={selectedUsuario?.id === currentUser?.id}
+          currentUserRole={currentUser?.rol}
         />
       )}
     </div>

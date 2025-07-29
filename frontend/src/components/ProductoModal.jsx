@@ -9,7 +9,7 @@ const cld = new Cloudinary({
   }
 });
 
-const ProductoModal = ({ isOpen, onClose, producto = null }) => {
+const ProductoModal = ({ isOpen, onClose, producto = null, readOnly = false }) => {
   const [formData, setFormData] = useState({
     nombre: '',
     descripcion: '',
@@ -31,10 +31,20 @@ const ProductoModal = ({ isOpen, onClose, producto = null }) => {
       setFormData({
         nombre: producto.nombre || '',
         descripcion: producto.descripcion || '',
-        precio: producto.precio || '',
-        stock: producto.stock || '',
+        precio: producto.precio?.toString() || '',
+        stock: producto.stock?.toString() || '',
         imagen_url: producto.imagen_url || '',
-        categoria_id: producto.categoria_id || ''
+        categoria_id: producto.categoria_id?.toString() || ''
+      });
+    } else {
+      // Reset form when no producto is provided
+      setFormData({
+        nombre: '',
+        descripcion: '',
+        precio: '',
+        stock: '',
+        imagen_url: '',
+        categoria_id: ''
       });
     }
   }, [producto]);
@@ -191,7 +201,7 @@ const ProductoModal = ({ isOpen, onClose, producto = null }) => {
       <div className="bg-white rounded-lg w-full max-w-md">
         <div className="flex justify-between items-center p-4 border-b">
           <h2 className="text-xl font-semibold">
-            {producto ? 'Editar Producto' : 'Nuevo Producto'}
+            {readOnly ? 'Detalles del Producto' : (producto ? 'Editar Producto' : 'Nuevo Producto')}
           </h2>
           <button
             onClick={onClose}
@@ -206,20 +216,22 @@ const ProductoModal = ({ isOpen, onClose, producto = null }) => {
             <label className="block text-sm font-medium text-gray-700">Nombre</label>
             <input
               type="text"
-              required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              required={!readOnly}
+              readOnly={readOnly}
+              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm ${readOnly ? 'bg-gray-50' : 'focus:border-indigo-500 focus:ring-indigo-500'}`}
               value={formData.nombre}
-              onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+              onChange={(e) => !readOnly && setFormData({ ...formData, nombre: e.target.value })}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700">Descripción</label>
             <textarea
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              readOnly={readOnly}
+              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm ${readOnly ? 'bg-gray-50' : 'focus:border-indigo-500 focus:ring-indigo-500'}`}
               rows="3"
               value={formData.descripcion}
-              onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
+              onChange={(e) => !readOnly && setFormData({ ...formData, descripcion: e.target.value })}
             />
           </div>
 
@@ -229,10 +241,11 @@ const ProductoModal = ({ isOpen, onClose, producto = null }) => {
               <input
                 type="number"
                 step="0.01"
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                required={!readOnly}
+                readOnly={readOnly}
+                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm ${readOnly ? 'bg-gray-50' : 'focus:border-indigo-500 focus:ring-indigo-500'}`}
                 value={formData.precio}
-                onChange={(e) => setFormData({ ...formData, precio: e.target.value })}
+                onChange={(e) => !readOnly && setFormData({ ...formData, precio: e.target.value })}
               />
             </div>
 
@@ -240,10 +253,11 @@ const ProductoModal = ({ isOpen, onClose, producto = null }) => {
               <label className="block text-sm font-medium text-gray-700">Stock</label>
               <input
                 type="number"
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                required={!readOnly}
+                readOnly={readOnly}
+                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm ${readOnly ? 'bg-gray-50' : 'focus:border-indigo-500 focus:ring-indigo-500'}`}
                 value={formData.stock}
-                onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                onChange={(e) => !readOnly && setFormData({ ...formData, stock: e.target.value })}
               />
             </div>
           </div>
@@ -258,31 +272,35 @@ const ProductoModal = ({ isOpen, onClose, producto = null }) => {
                   className="h-20 w-20 object-cover rounded-lg"
                 />
               )}
-              <label className="cursor-pointer flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                <Upload className="h-5 w-5 mr-2" />
-                {uploadingImage ? 'Subiendo...' : 'Subir imagen'}
-                <input
-                  type="file"
-                  className="hidden"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  disabled={uploadingImage}
-                />
-              </label>
+              {!readOnly && (
+                <label className="cursor-pointer flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                  <Upload className="h-5 w-5 mr-2" />
+                  {uploadingImage ? 'Subiendo...' : 'Subir imagen'}
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={uploadingImage}
+                  />
+                </label>
+              )}
             </div>
           </div>
 
           <div>
             <div className="flex justify-between items-center mb-2">
               <label className="block text-sm font-medium text-gray-700">Categoría</label>
-              <button
-                type="button"
-                onClick={() => setMostrarNuevaCategoria(!mostrarNuevaCategoria)}
-                className="text-sm text-indigo-600 hover:text-indigo-800 flex items-center"
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Nueva categoría
-              </button>
+              {!readOnly && (
+                <button
+                  type="button"
+                  onClick={() => setMostrarNuevaCategoria(!mostrarNuevaCategoria)}
+                  className="text-sm text-indigo-600 hover:text-indigo-800 flex items-center"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Nueva categoría
+                </button>
+              )}
             </div>
             {mostrarNuevaCategoria ? (
               <div className="flex space-x-2">
@@ -304,9 +322,10 @@ const ProductoModal = ({ isOpen, onClose, producto = null }) => {
               </div>
             ) : (
               <select
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                disabled={readOnly}
+                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm ${readOnly ? 'bg-gray-50' : 'focus:border-indigo-500 focus:ring-indigo-500'}`}
                 value={formData.categoria_id}
-                onChange={(e) => setFormData({ ...formData, categoria_id: e.target.value })}
+                onChange={(e) => !readOnly && setFormData({ ...formData, categoria_id: e.target.value })}
               >
                 <option value="">Seleccionar categoría</option>
                 {categorias.map((categoria) => (
@@ -330,13 +349,15 @@ const ProductoModal = ({ isOpen, onClose, producto = null }) => {
             >
               Cancelar
             </button>
-            <button
-              type="submit"
-              disabled={loading || uploadingImage}
-              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-            >
-              {loading ? 'Guardando...' : producto ? 'Actualizar' : 'Crear'}
-            </button>
+            {!readOnly && (
+              <button
+                type="submit"
+                disabled={loading || uploadingImage}
+                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+              >
+                {loading ? 'Guardando...' : producto ? 'Actualizar' : 'Crear'}
+              </button>
+            )}
           </div>
         </form>
       </div>

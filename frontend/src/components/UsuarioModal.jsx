@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 
-const UsuarioModal = ({ usuario, mode, onClose, onSave }) => {
+const UsuarioModal = ({ usuario, mode, onClose, onSave, isEditingSelf, currentUserRole }) => {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
     password: '',
     nombre: '',
-    rol: 'user',
+    rol: 'Usuario',
     zona_acceso: 'general',
     is_active: true
   });
@@ -18,7 +18,7 @@ const UsuarioModal = ({ usuario, mode, onClose, onSave }) => {
         email: usuario.email || '',
         password: '',
         nombre: usuario.nombre || '',
-        rol: usuario.rol || 'user',
+        rol: usuario.rol || 'Usuario',
         zona_acceso: usuario.zona_acceso || 'general',
         is_active: usuario.is_active
       });
@@ -132,10 +132,10 @@ const UsuarioModal = ({ usuario, mode, onClose, onSave }) => {
               name="rol"
               value={formData.rol}
               onChange={handleChange}
-              disabled={mode === 'view'}
+              disabled={mode === 'view' || (isEditingSelf && currentUserRole === 'Usuario')}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             >
-              <option value="user">Usuario</option>
+              <option value="Usuario">Usuario</option>
               <option value="staff">Staff</option>
               <option value="admin">Administrador</option>
             </select>

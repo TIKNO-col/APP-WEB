@@ -66,7 +66,7 @@ export default function Auth() {
           username,
           password,
           nombre,
-          rol: 'usuario',
+          rol: 'Usuario',
           zona_acceso: 'general'
         }),
       })

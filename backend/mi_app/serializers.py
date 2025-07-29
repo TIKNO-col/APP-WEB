@@ -21,7 +21,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
         }
 
     def get_is_admin(self, obj):
-        return obj.rol == 'admin'
+        return obj.rol in ['admin', 'staff']
 
     def get_created_at_formatted(self, obj):
         return obj.created_at.strftime('%d/%m/%Y %H:%M') if obj.created_at else None
@@ -32,7 +32,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
             username=validated_data['username'],
             password=validated_data['password'],
             nombre=validated_data['nombre'],
-            rol=validated_data.get('rol', 'usuario'),
+            rol=validated_data.get('rol', 'Usuario'),
             zona_acceso=validated_data.get('zona_acceso', 'general')
         )
         return user

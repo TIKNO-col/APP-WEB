@@ -26,9 +26,9 @@ class RegistroUsuarioView(CreateAPIView):
     serializer_class = UsuarioSerializer
 
     def create(self, request, *args, **kwargs):
-        if request.user.rol != 'admin':
+        if request.user.rol not in ['admin', 'staff']:
             return Response(
-                {'detail': 'Solo los administradores pueden crear nuevos usuarios'},
+                {'detail': 'Solo los administradores y staff pueden crear nuevos usuarios'},
                 status=status.HTTP_403_FORBIDDEN
             )
         return super().create(request, *args, **kwargs)
@@ -50,8 +50,8 @@ class PerfilUsuarioView(RetrieveUpdateAPIView):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         
-        # Si no es admin, no puede cambiar roles ni zonas de acceso
-        if request.user.rol != 'admin':
+        # Si no es admin o staff, no puede cambiar roles ni zonas de acceso
+        if request.user.rol not in ['admin', 'staff']:
             if 'rol' in request.data or 'zona_acceso' in request.data:
                 return Response(
                     {'detail': 'No tienes permiso para modificar roles o zonas de acceso'},
@@ -67,7 +67,7 @@ class PerfilUsuarioView(RetrieveUpdateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, *args, **kwargs):
-        if not request.user.rol == 'admin':
+        if request.user.rol not in ['admin', 'staff']:
             return Response({'detail': 'No tienes permiso para eliminar usuarios'}, 
                             status=status.HTTP_403_FORBIDDEN)
         return super().destroy(request, *args, **kwargs)
@@ -206,9 +206,9 @@ class VentaViewSet(viewsets.ModelViewSet):
             )
 
     def destroy(self, request, *args, **kwargs):
-        if request.user.rol != 'admin':
+        if request.user.rol not in ['admin', 'staff']:
             return Response(
-                {'detail': 'Solo los administradores pueden eliminar ventas'},
+                {'detail': 'Solo los administradores y staff pueden eliminar ventas'},
                 status=status.HTTP_403_FORBIDDEN
             )
         return super().destroy(request, *args, **kwargs)
@@ -322,7 +322,7 @@ class ListaUsuariosView(ListAPIView):
     
     def get_queryset(self):
         queryset = Usuario.objects.select_related().all()
-        if self.request.user.rol != 'admin':
+        if self.request.user.rol not in ['admin', 'staff']:
             queryset = queryset.filter(id=self.request.user.id)
         return queryset.order_by('-created_at')
 
@@ -339,7 +339,7 @@ class PerfilUsuarioView(RetrieveUpdateAPIView):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         
-        if request.user.rol != 'admin':
+        if request.user.rol not in ['admin', 'staff']:
             if 'rol' in request.data or 'zona_acceso' in request.data:
                 return Response(
                     {'detail': 'No tienes permiso para modificar roles o zonas de acceso'},
@@ -353,7 +353,7 @@ class PerfilUsuarioView(RetrieveUpdateAPIView):
         return Response(serializer.data)
 
     def delete(self, request, *args, **kwargs):
-        if not request.user.rol == 'admin':
+        if request.user.rol not in ['admin', 'staff']:
             return Response({'detail': 'No tienes permiso para eliminar usuarios'}, 
                             status=status.HTTP_403_FORBIDDEN)
         return super().destroy(request, *args, **kwargs)
@@ -367,14 +367,14 @@ class UsuarioDetailView(RetrieveUpdateDestroyAPIView):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         
-        # Si no es admin, no puede cambiar roles ni zonas de acceso
-        if request.user.rol != 'admin' and request.user.id != instance.id:
+        # Si no es admin o staff, no puede cambiar roles ni zonas de acceso
+        if request.user.rol not in ['admin', 'staff'] and request.user.id != instance.id:
             return Response(
                 {'detail': 'No tienes permiso para modificar otros usuarios'},
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        if request.user.rol != 'admin':
+        if request.user.rol not in ['admin', 'staff']:
             if 'rol' in request.data or 'zona_acceso' in request.data:
                 return Response(
                     {'detail': 'No tienes permiso para modificar roles o zonas de acceso'},
@@ -395,7 +395,7 @@ class UsuarioDetailView(RetrieveUpdateDestroyAPIView):
         return obj
 
     def destroy(self, request, *args, **kwargs):
-        if not request.user.rol == 'admin':
+        if request.user.rol not in ['admin', 'staff']:
             return Response(
                 {'detail': 'No tienes permiso para eliminar usuarios'},
                 status=status.HTTP_403_FORBIDDEN
@@ -417,10 +417,10 @@ class UsuarioDetailView(RetrieveUpdateDestroyAPIView):
             )
 
     def get_queryset(self):
-        # Si es admin, puede ver todos los usuarios
-        if self.request.user.rol == 'admin':
+        # Si es admin o staff, puede ver todos los usuarios
+        if self.request.user.rol in ['admin', 'staff']:
             return Usuario.objects.all().order_by('-created_at')
-        # Si no es admin, solo puede verse a sí mismo
+        # Si no es admin o staff, solo puede verse a sí mismo
         return Usuario.objects.filter(id=self.request.user.id)
 
     def get_object(self):
@@ -429,7 +429,7 @@ class UsuarioDetailView(RetrieveUpdateDestroyAPIView):
         return obj
 
     def delete(self, request, *args, **kwargs):
-        if not request.user.rol == 'admin':
+        if request.user.rol not in ['admin', 'staff']:
             return Response(
                 {'detail': 'No tienes permiso para eliminar usuarios'},
                 status=status.HTTP_403_FORBIDDEN
@@ -498,25 +498,25 @@ class ProductoViewSet(viewsets.ModelViewSet):
         return queryset
 
     def create(self, request, *args, **kwargs):
-        if request.user.rol != 'admin':
+        if request.user.rol not in ['admin', 'staff']:
             return Response(
-                {'detail': 'Solo los administradores pueden crear productos'},
+                {'detail': 'Solo los administradores y staff pueden crear productos'},
                 status=status.HTTP_403_FORBIDDEN
             )
         return super().create(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
-        if request.user.rol != 'admin':
+        if request.user.rol not in ['admin', 'staff']:
             return Response(
-                {'detail': 'Solo los administradores pueden modificar productos'},
+                {'detail': 'Solo los administradores y staff pueden modificar productos'},
                 status=status.HTTP_403_FORBIDDEN
             )
         return super().update(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
-        if request.user.rol != 'admin':
+        if request.user.rol not in ['admin', 'staff']:
             return Response(
-                {'detail': 'Solo los administradores pueden eliminar productos'},
+                {'detail': 'Solo los administradores y staff pueden eliminar productos'},
                 status=status.HTTP_403_FORBIDDEN
             )
         return super().destroy(request, *args, **kwargs)
