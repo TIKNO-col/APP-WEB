@@ -187,15 +187,24 @@ const ProductosTableContainer = () => {
                         setProductoSeleccionado(producto);
                         setModalAbierto(true);
                       }}
-                      className="text-indigo-600 hover:text-indigo-900"
+                      className="text-blue-600 hover:text-blue-900"
+                      title="Ver detalles"
                     >
-                      Editar
+                      <Eye className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => handleDelete(producto.id)}
-                      className="text-red-600 hover:text-red-900"
+                      onClick={() => onEdit(producto)}
+                      className="text-indigo-600 hover:text-indigo-900"
+                      title="Editar"
                     >
-                      Eliminar
+                      <Edit2 className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => onDelete(producto.id)}
+                      className="text-red-600 hover:text-red-900"
+                      title="Eliminar"
+                    >
+                      <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
                 </td>
@@ -218,7 +227,7 @@ const ProductosTableContainer = () => {
   );
 };
 
-const ProductosTable = ({ productos, onEdit, onDelete, loading, userRole }) => {
+const ProductosTable = ({ productos, onEdit, onDelete, loading }) => {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
   const sortedProductos = [...productos].sort((a, b) => {
@@ -346,34 +355,29 @@ const ProductosTable = ({ productos, onEdit, onDelete, loading, userRole }) => {
                   {producto.categoria?.nombre || 'Sin categoría'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {userRole && userRole !== 'Usuario' ? (
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => onEdit(producto)}
-                        className="text-indigo-600 hover:text-indigo-900"
-                        title="Editar"
-                      >
-                        <Edit2 className="h-5 w-5" />
-                      </button>
-                      <button
-                        onClick={() => onDelete(producto)}
-                        className="text-red-600 hover:text-red-900"
-                        title="Eliminar"
-                      >
-                        <Trash2 className="h-5 w-5" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => onEdit(producto)}
-                        className="text-blue-600 hover:text-blue-900"
-                        title="Ver detalles"
-                      >
-                        <Eye className="h-5 w-5" />
-                      </button>
-                    </div>
-                  )}
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => onEdit(producto)}
+                      className="text-blue-600 hover:text-blue-900"
+                      title="Ver detalles"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => onEdit(producto)}
+                      className="text-indigo-600 hover:text-indigo-900"
+                      title="Editar"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => onDelete(producto)}
+                      className="text-red-600 hover:text-red-900"
+                      title="Eliminar"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))

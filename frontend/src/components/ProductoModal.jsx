@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Upload, Plus } from 'lucide-react';
 import { supabase } from '../supabase';
 import { Cloudinary } from '@cloudinary/url-gen';
@@ -64,7 +64,7 @@ const ProductoModal = ({ isOpen, onClose, producto = null, readOnly = false }) =
     }
   };
 
-  const handleImageUpload = useCallback(async (e) => {
+  const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -115,7 +115,7 @@ const ProductoModal = ({ isOpen, onClose, producto = null, readOnly = false }) =
     } finally {
       setUploadingImage(false);
     }
-  }, []);
+  };
 
   const handleCrearCategoria = async () => {
     if (!nuevaCategoria.trim()) {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { supabase } from '../supabase';
 import ProductosTable from './ProductosTable';
@@ -11,9 +11,12 @@ const Productos = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProducto, setSelectedProducto] = useState(null);
 
+
   useEffect(() => {
     fetchProductos();
   }, []);
+
+
 
   const fetchProductos = async () => {
     try {
