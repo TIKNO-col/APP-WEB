@@ -1,4 +1,25 @@
-# APP WEB - Proyecto Full Stack
+# 🛒 Sistema de Gestión Comercial
+
+## 🚀 **VERSIÓN 2.0.0 - CLOUDINARY & ANIMATIONS UPDATE**
+
+### 📋 **DOCUMENTACIÓN DE LA VERSIÓN:**
+- 🏷️ [**VERSION.md**](./VERSION.md) - Información detallada de la versión actual
+- 📋 [**CHANGELOG.md**](./CHANGELOG.md) - Registro completo de cambios y mejoras
+- 📖 [**Frontend README**](./frontend/README.md) - Documentación específica del frontend
+
+---
+
+## 🆕 **VERSIÓN 2.0.0 - NUEVAS CARACTERÍSTICAS**
+
+### ✨ **NOVEDADES DE ESTA VERSIÓN:**
+- 🖼️ **Gestión de imágenes con Cloudinary** - Subida y almacenamiento de imágenes de productos
+- 🎨 **Animaciones mejoradas** - Interfaz más fluida con Framer Motion
+- 🔐 **Sistema de roles avanzado** - Control granular de permisos por usuario
+- 📱 **Interfaz optimizada** - Mejor experiencia de usuario y diseño responsivo
+- 🛡️ **Validaciones mejoradas** - Mayor seguridad en formularios y datos
+- 🚀 **Rendimiento optimizado** - Carga más rápida y eficiente
+
+---
 
 Un proyecto full stack moderno que combina Django como backend y React con Vite como frontend.
 
@@ -10,6 +31,9 @@ Un proyecto full stack moderno que combina Django como backend y React con Vite 
 - **Simple JWT** - Autenticación basada en tokens JWT
 - **SQLite** - Base de datos (por defecto)
 - **Python** - Lenguaje de programación
+- 🆕 **Pillow** - Procesamiento de imágenes
+- 🆕 **Django Filter** - Filtrado avanzado de datos
+- 🆕 **Django Extensions** - Utilidades de desarrollo
 
 ### Frontend
 - **React 19.1.0** - Biblioteca de JavaScript para interfaces de usuario
@@ -21,6 +45,10 @@ Un proyecto full stack moderno que combina Django como backend y React con Vite 
 - **Axios 1.6.7** - Cliente HTTP para peticiones API
 - **Framer Motion 12.23.0** - Biblioteca de animaciones
 - **ESLint** - Linter para JavaScript/React
+- 🆕 **Cloudinary React** - Gestión de imágenes en la nube
+- 🆕 **Cloudinary URL-Gen** - Generación de URLs optimizadas
+- 🆕 **SHA.js** - Funciones de hash criptográficas
+- 🆕 **Supabase** - Backend como servicio
 
 ### Herramientas de Desarrollo
 - **pnpm** - Gestor de paquetes para el frontend
@@ -263,8 +291,13 @@ Los tokens JWT se almacenan en el localStorage:
 - Campos: nombre, descripción, precio, stock, categoría, imagen
 - Categorización de productos
 - Control de inventario con validación de stock
-- Soporte para imágenes de productos
+- 🆕 **Gestión avanzada de imágenes con Cloudinary**
+  - Subida directa de imágenes
+  - Optimización automática de imágenes
+  - URLs seguras y optimizadas
+  - Validación de tipos y tamaños de archivo
 - Filtrado por categoría y búsqueda por nombre
+- 🆕 **Interfaz mejorada con animaciones fluidas**
 
 ### Sistema de Ventas
 - **Carrito de compras inteligente**
@@ -294,6 +327,29 @@ Los tokens JWT se almacenan en el localStorage:
 - **Interfaz responsiva**: Diseño adaptable con Tailwind CSS
 - **Manejo de errores**: Mensajes informativos para el usuario
 - **Optimización de rendimiento**: Carga eficiente de datos
+
+### 🆕 **NUEVAS CARACTERÍSTICAS TÉCNICAS - V2.0.0**
+- **🖼️ Integración con Cloudinary**:
+  - Subida segura de imágenes
+  - Transformaciones automáticas
+  - CDN global para carga rápida
+  - Validación de archivos del lado cliente y servidor
+- **🎨 Animaciones con Framer Motion**:
+  - Transiciones suaves entre páginas
+  - Efectos de entrada y salida
+  - Animaciones de carga y estados
+- **🔐 Sistema de roles mejorado**:
+  - Control granular de permisos
+  - Validación de acceso por componente
+  - Diferentes niveles de usuario
+- **🛡️ Validaciones avanzadas**:
+  - Validación de tipos de archivo
+  - Límites de tamaño de imagen
+  - Sanitización de datos de entrada
+- **⚡ Optimizaciones de rendimiento**:
+  - Lazy loading de componentes
+  - Memoización de funciones costosas
+  - Optimización de consultas de base de datos
 
 ## 🔧 Configuración Adicional
 

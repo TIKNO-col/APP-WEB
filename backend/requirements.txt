@@ -6,6 +6,17 @@ requests==2.31.0
 django-environ==0.11.2
 djangorestframework==3.14.0
 dj-database-url==3.0.1
-#new 9/07/25
+
+# Autenticación JWT - Agregado 9/07/25
 djangorestframework-simplejwt==5.3.1
+
+# 🆕 NUEVAS DEPENDENCIAS - Versión 2.0.0
+# Manejo de imágenes y archivos multimedia
+Pillow==10.4.0
+# Validación y procesamiento de datos
+django-filter==24.3
+# Soporte para CORS mejorado
+django-cors-headers==4.3.1
+# Utilidades para desarrollo
+django-extensions==3.2.3
 
