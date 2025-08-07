@@ -178,7 +178,7 @@ const ProductosTableContainer = () => {
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  ${producto.precio.toFixed(2)}
+                  ${parseFloat(producto.precio || 0).toFixed(2)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center space-x-3">
@@ -230,7 +230,7 @@ const ProductosTableContainer = () => {
 const ProductosTable = ({ productos, onEdit, onDelete, loading }) => {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
-  const sortedProductos = [...productos].sort((a, b) => {
+  const sortedProductos = [...(productos || [])].sort((a, b) => {
     if (!sortConfig.key) return 0;
 
     const aValue = a[sortConfig.key];
@@ -331,7 +331,7 @@ const ProductosTable = ({ productos, onEdit, onDelete, loading }) => {
                   {producto.descripcion}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  ${producto.precio.toFixed(2)}
+                  ${parseFloat(producto.precio || 0).toFixed(2)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <span

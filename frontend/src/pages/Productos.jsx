@@ -1,20 +1,29 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import ProductoModal from '../components/ProductoModal';
 import ProductosTable from '../components/ProductosTable';
 import { supabase } from '../supabase';
 import { makeAuthenticatedRequest } from '../services/auth';
+import { useProductosCache } from '../hooks/useCache';
+import RefreshButton from '../components/RefreshButton';
+import { CacheStatus } from '../components/RefreshButton';
 
 const Productos = () => {
-  const [productos, setProductos] = useState([]);
+  const {
+    data: productos,
+    loading,
+    error,
+    refresh,
+    updateItem,
+    removeItem,
+    addItem,
+    lastUpdated
+  } = useProductosCache();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProducto, setSelectedProducto] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
-    fetchProductos();
     fetchUserProfile();
   }, []);
 
@@ -28,26 +37,7 @@ const Productos = () => {
     }
   };
 
-  const fetchProductos = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('productos')
-        .select(`
-          *,
-          categoria:categorias(id, nombre)
-        `)
-        .order('nombre');
-
-      if (error) throw error;
-      setProductos(data);
-    } catch (error) {
-      console.error('Error fetching productos:', error);
-      setError('Error al cargar los productos');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // La función fetchProductos ya no es necesaria, se maneja con el hook useProductosCache
 
   const handleEdit = (producto) => {
     setSelectedProducto(producto);
@@ -63,7 +53,10 @@ const Productos = () => {
           .eq('id', id);
 
         if (error) throw error;
-        await fetchProductos();
+        
+        // Actualizar el caché
+        removeItem(id);
+        alert('Producto eliminado exitosamente');
       } catch (error) {
         console.error('Error deleting producto:', error);
         alert('Error al eliminar el producto');
@@ -71,25 +64,40 @@ const Productos = () => {
     }
   };
 
-  const handleModalClose = () => {
+  const handleModalClose = (productoActualizado) => {
     setIsModalOpen(false);
     setSelectedProducto(null);
-    fetchProductos();
+    
+    if (productoActualizado) {
+      if (selectedProducto) {
+        // Actualización
+        updateItem(productoActualizado.id, productoActualizado);
+      } else {
+        // Nuevo producto
+        addItem(productoActualizado);
+      }
+    }
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Productos</h1>
-        {userRole && userRole !== 'Usuario' && (
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-          >
-            <Plus className="h-5 w-5" />
-            Nuevo Producto
-          </button>
-        )}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold text-gray-900">Productos</h1>
+          <div className="flex items-center gap-3">
+            <RefreshButton onRefresh={refresh} loading={loading} />
+            {userRole && userRole !== 'Usuario' && (
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              >
+                <Plus className="h-5 w-5" />
+                Nuevo Producto
+              </button>
+            )}
+          </div>
+        </div>
+        <CacheStatus lastUpdated={lastUpdated} />
       </div>
 
       {error && (

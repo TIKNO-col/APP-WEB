@@ -13,7 +13,7 @@ const ClientesTable = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [clientes] = useState(mockClientes);
 
-  const filteredClientes = clientes.filter(cliente =>
+  const filteredClientes = (clientes || []).filter(cliente =>
     Object.values(cliente).some(value =>
       value.toString().toLowerCase().includes(searchTerm.toLowerCase())
     )

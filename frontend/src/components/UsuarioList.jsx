@@ -1,12 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { makeAuthenticatedRequest } from '../services/auth';
+import { useUsuariosCache } from '../hooks/useCache';
+import RefreshButton, { CacheStatus } from './RefreshButton';
 import { Eye, PencilLine, Trash2, Plus, Search, X } from 'lucide-react';
 import UsuarioModal from './UsuarioModal';
 
 const UsuarioList = () => {
-  const [usuarios, setUsuarios] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const {
+    data: usuarios,
+    loading,
+    error,
+    refresh,
+    addItem,
+    updateItem,
+    removeItem,
+    isFromCache,
+    lastFetch,
+    cacheInfo
+  } = useUsuariosCache();
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [selectedUsuario, setSelectedUsuario] = useState(null);
@@ -14,38 +26,22 @@ const UsuarioList = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  const fetchUsuarios = async () => {
+  const fetchCurrentUser = async () => {
     try {
-      setLoading(true);
+      const response = await makeAuthenticatedRequest('/usuarios/perfil/', { method: 'GET' });
+      const perfilData = await response.json();
       
-      // Realizar ambas peticiones en paralelo
-      const [perfilResponse, usuariosResponse] = await Promise.all([
-        makeAuthenticatedRequest('/usuarios/perfil/', { method: 'GET' }),
-        makeAuthenticatedRequest('/usuarios/', { method: 'GET' })
-      ]);
-
-      const [perfilData, usuariosData] = await Promise.all([
-        perfilResponse.json(),
-        usuariosResponse.json()
-      ]);
-
-      if (!perfilResponse.ok) throw new Error(perfilData.detail || 'Error al obtener el perfil');
-      if (!usuariosResponse.ok) throw new Error(usuariosData.detail || 'Error al obtener los usuarios');
-
+      if (!response.ok) throw new Error(perfilData.detail || 'Error al obtener el perfil');
+      
       setCurrentUser(perfilData);
       setIsAdmin(perfilData.rol === 'admin' || perfilData.rol === 'staff');
-      setUsuarios(usuariosData);
-      setError(null);
     } catch (error) {
-      console.error('Error fetching data:', error);
-      setError(error.message || 'Error al cargar los datos');
-    } finally {
-      setLoading(false);
+      console.error('Error fetching current user:', error);
     }
   };
 
   useEffect(() => {
-    fetchUsuarios();
+    fetchCurrentUser();
   }, []); // Solo se ejecuta al montar el componente
 
   const handleView = (usuario) => {
@@ -88,7 +84,7 @@ const UsuarioList = () => {
         });
 
         if (response.ok) {
-          setUsuarios(prevUsuarios => prevUsuarios.filter(u => u.id !== usuario.id));
+          removeItem(usuario.id);
           alert('Usuario eliminado exitosamente');
         } else {
           const data = await response.json().catch(() => ({}));
@@ -131,17 +127,12 @@ const UsuarioList = () => {
 
       if (response.ok) {
         if (modalMode === 'create') {
-          setUsuarios(prevUsuarios => [data, ...prevUsuarios]);
+          addItem(data);
           alert('Usuario creado exitosamente');
         } else {
-          setUsuarios(prevUsuarios => 
-            prevUsuarios.map(usuario => 
-              usuario.id === selectedUsuario.id ? data : usuario
-            )
-          );
+          updateItem(data);
           alert('Usuario actualizado exitosamente');
         }
-        setError(null);
         handleModalClose();
       } else {
         let errorMessage = 'Error al procesar la solicitud';
@@ -164,7 +155,7 @@ const UsuarioList = () => {
     }
   };
 
-  const filteredUsuarios = usuarios.filter(usuario =>
+  const filteredUsuarios = (usuarios || []).filter(usuario =>
     usuario.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     usuario.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     usuario.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -183,16 +174,33 @@ const UsuarioList = () => {
     <div className="bg-white shadow-lg rounded-lg overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-200">
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-gray-800">Lista de Usuarios</h2>
-          {isAdmin && (
-            <button
-              onClick={handleCreate}
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center"
-            >
-              <Plus className="mr-2" size={16} />
-              Nuevo Usuario
-            </button>
-          )}
+          <div>
+            <h2 className="text-xl font-semibold text-gray-800">Lista de Usuarios</h2>
+            <CacheStatus 
+              isFromCache={isFromCache}
+              lastFetch={lastFetch}
+              cacheInfo={cacheInfo}
+              className="mt-1"
+            />
+          </div>
+          <div className="flex items-center gap-3">
+            <RefreshButton
+              onRefresh={refresh}
+              loading={loading}
+              lastUpdate={lastFetch}
+              variant="outline"
+              size="sm"
+            />
+            {isAdmin && (
+              <button
+                onClick={handleCreate}
+                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center"
+              >
+                <Plus className="mr-2" size={16} />
+                Nuevo Usuario
+              </button>
+            )}
+          </div>
         </div>
         
         <div className="mt-4 relative">
