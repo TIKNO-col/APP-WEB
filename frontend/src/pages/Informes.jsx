@@ -3,6 +3,7 @@ import { Download } from 'lucide-react';
 import { makeAuthenticatedRequest } from '../services/auth';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { formatCOP } from '../utils/formatters';
 
 const InformesPage = () => {
   const [tipoInforme, setTipoInforme] = useState('fecha');
@@ -239,7 +240,7 @@ const InformesPage = () => {
       // Agregar resumen
       const tipoConteo = tipoInforme === 'producto' ? 'Número de Items' : 'Número de Ventas';
       doc.text(`${tipoConteo}: ${cantidadTotal}`, 14, 42);
-      doc.text(`Monto Total: $${montoTotal.toFixed(2)}`, 14, 52);
+      doc.text(`Monto Total: ${formatCOP(montoTotal)}`, 14, 52);
       
       // Verificar si hay datos para la tabla
       if (ventasFiltradas.length === 0) {
@@ -266,8 +267,8 @@ const InformesPage = () => {
         cliente: item.cliente || '',
         producto: item.producto || '',
         cantidad: item.cantidad || 0,
-        precio: `$${item.precio?.toFixed(2) || '0.00'}`,
-        total: `$${item.total?.toFixed(2) || '0.00'}`
+        precio: formatCOP(item.precio),
+        total: formatCOP(item.total)
       }));
       
       console.log('Datos preparados para la tabla:', data.slice(0, 2)); // Mostrar solo los primeros 2 para debug
@@ -410,7 +411,7 @@ const InformesPage = () => {
         </div>
         <div className="rounded-lg bg-green-50 p-4">
           <h4 className="text-sm font-medium text-green-900">Monto Total</h4>
-          <p className="text-2xl font-bold text-green-600">${montoTotal.toFixed(2)}</p>
+          <p className="text-2xl font-bold text-green-600">{formatCOP(montoTotal)}</p>
         </div>
       </div>
 
@@ -445,14 +446,14 @@ const InformesPage = () => {
                     </tr>
                   ) : (
                     ventasFiltradas.map((item, index) => (
-                      <tr key={`${item.id}-${index}`} className="border-b bg-white hover:bg-gray-50">
+                      <tr key={item.id || `venta-${index}`} className="border-b bg-white hover:bg-gray-50">
                         <td className="px-6 py-4 font-medium text-gray-900">{item.id}</td>
                         <td className="px-6 py-4">{item.fecha}</td>
                         <td className="px-6 py-4">{item.cliente}</td>
                         <td className="px-6 py-4">{item.producto}</td>
                         <td className="px-6 py-4">{item.cantidad}</td>
-                        <td className="px-6 py-4">${item.precio?.toFixed(2) || '0.00'}</td>
-                        <td className="px-6 py-4">${item.total?.toFixed(2) || '0.00'}</td>
+                        <td className="px-6 py-4">{formatCOP(item.precio)}</td>
+                        <td className="px-6 py-4">{formatCOP(item.total)}</td>
                       </tr>
                     ))
                   )}

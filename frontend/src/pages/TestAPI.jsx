@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { formatCOP } from '../utils/formatters';
 
 const TestAPI = () => {
   const [productos, setProductos] = useState([]);
@@ -70,11 +71,11 @@ const TestAPI = () => {
         <h2 className="text-lg font-semibold mb-2">Productos ({productos.length}):</h2>
         {productos.length > 0 ? (
           <ul className="space-y-2">
-            {productos.map((producto, index) => (
-              <li key={index} className="bg-white border rounded p-3">
+            {productos.map((producto) => (
+              <li key={producto.id} className="bg-white border rounded p-3">
                 <div><strong>ID:</strong> {producto.id}</div>
                 <div><strong>Nombre:</strong> {producto.nombre}</div>
-                <div><strong>Precio:</strong> ${producto.precio}</div>
+                <div><strong>Precio:</strong> {formatCOP(producto.precio)}</div>
                 <div><strong>Stock:</strong> {producto.stock}</div>
                 <div><strong>Categoría:</strong> {producto.categoria_nombre}</div>
               </li>

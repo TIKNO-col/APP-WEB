@@ -3,6 +3,7 @@ import ProductoModal from './ProductoModal';
 import { Search, MoreVertical, AlertTriangle } from 'lucide-react';
 import { supabase } from '../supabase';
 import { Edit2, Trash2, Eye } from 'lucide-react';
+import { formatCOP } from '../utils/formatters';
 
 const categorias = [
   'Todas',
@@ -106,7 +107,7 @@ const ProductosTableContainer = () => {
           value={categoriaSeleccionada}
           onChange={(e) => setCategoriaSeleccionada(e.target.value)}
         >
-          {categorias.map(cat => (
+          {categorias.map((cat, index) => (
             <option key={cat} value={cat}>{cat}</option>
           ))}
         </select>
@@ -144,6 +145,7 @@ const ProductosTableContainer = () => {
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Producto</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider max-w-48">Descripción</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
@@ -166,6 +168,9 @@ const ProductosTableContainer = () => {
                     <div className="text-sm font-medium text-gray-900">{producto.nombre}</div>
                   </div>
                 </td>
+                <td className="px-4 py-4 text-sm text-gray-500 max-w-48">
+                  <div className="truncate" title={producto.descripcion}>{producto.descripcion || 'Sin descripción'}</div>
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {producto.categoria?.nombre}
                 </td>
@@ -178,7 +183,7 @@ const ProductosTableContainer = () => {
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  ${parseFloat(producto.precio || 0).toFixed(2)}
+                  {formatCOP(producto.precio)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center space-x-3">
@@ -193,14 +198,17 @@ const ProductosTableContainer = () => {
                       <Eye className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => onEdit(producto)}
+                      onClick={() => {
+                        setProductoSeleccionado(producto);
+                        setModalAbierto(true);
+                      }}
                       className="text-indigo-600 hover:text-indigo-900"
                       title="Editar"
                     >
                       <Edit2 className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => onDelete(producto.id)}
+                      onClick={() => handleDelete(producto.id)}
                       className="text-red-600 hover:text-red-900"
                       title="Eliminar"
                     >
@@ -331,7 +339,7 @@ const ProductosTable = ({ productos, onEdit, onDelete, loading }) => {
                   {producto.descripcion}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  ${parseFloat(producto.precio || 0).toFixed(2)}
+                  {formatCOP(producto.precio)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <span
@@ -388,4 +396,4 @@ const ProductosTable = ({ productos, onEdit, onDelete, loading }) => {
   );
 };
 
-export default ProductosTable;
+export default ProductosTableContainer;

@@ -161,23 +161,26 @@ const ProductoModal = ({ isOpen, onClose, producto = null, readOnly = false }) =
         categoria_id: formData.categoria_id || null
       };
 
-      let error;
+      let result;
       if (producto) {
-        const { error: updateError } = await supabase
+        const { data, error: updateError } = await supabase
           .from('productos')
           .update(productoData)
-          .eq('id', producto.id);
-        error = updateError;
+          .eq('id', producto.id)
+          .select();
+        if (updateError) throw updateError;
+        result = data[0];
       } else {
-        const { error: insertError } = await supabase
+        const { data, error: insertError } = await supabase
           .from('productos')
-          .insert([productoData]);
-        error = insertError;
+          .insert([productoData])
+          .select();
+        if (insertError) throw insertError;
+        result = data[0];
       }
 
-      if (error) throw error;
-
-      onClose();
+      // Pasar el producto actualizado/creado al componente padre
+      onClose(result);
       setFormData({
         nombre: '',
         descripcion: '',

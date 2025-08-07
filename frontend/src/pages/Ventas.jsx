@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, ShoppingCart, Plus, Minus, Trash2, AlertCircle } from 'lucide-react';
 import { supabase } from '../supabase';
+import { formatCOP } from '../utils/formatters';
 
 const API_BASE_URL = 'http://localhost:8000/api';
 
@@ -320,7 +321,7 @@ const VentasPage = () => {
                    <span className="text-sm text-gray-500">{producto.categoria_nombre}</span>
                  </div>
                  <div className="mt-3 flex-grow">
-                   <span className="text-lg font-bold text-green-600">${parseFloat(producto.precio).toFixed(2)}</span>
+                   <span className="text-lg font-bold text-green-600">{formatCOP(producto.precio)}</span>
                  </div>
                  <div className="flex items-center gap-2 mt-3">
                    <input
@@ -381,7 +382,7 @@ const VentasPage = () => {
                 <div key={item.id} className="flex items-center justify-between rounded-lg border border-gray-200 p-4">
                   <div className="flex-1">
                     <h4 className="font-medium text-gray-900">{item.nombre}</h4>
-                    <p className="text-sm text-gray-600">${parseFloat(item.precio).toFixed(2)} c/u</p>
+                    <p className="text-sm text-gray-600">{formatCOP(item.precio)} c/u</p>
                     <p className="text-xs text-gray-500">Stock disponible: {item.stock}</p>
                   </div>
                   <div className="flex items-center space-x-3">
@@ -418,7 +419,7 @@ const VentasPage = () => {
                     </button>
                   </div>
                   <div className="ml-4 text-right">
-                    <p className="font-medium text-gray-900">${(parseFloat(item.precio) * item.cantidad).toFixed(2)}</p>
+                    <p className="font-medium text-gray-900">{formatCOP(parseFloat(item.precio) * item.cantidad)}</p>
                   </div>
                 </div>
               ))}
@@ -427,15 +428,15 @@ const VentasPage = () => {
               <div className="rounded-lg bg-gray-50 p-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Subtotal:</span>
-                  <span>${calcularTotal().subtotal.toFixed(2)}</span>
+                  <span>{formatCOP(calcularTotal().subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Impuesto (16%):</span>
-                  <span>${calcularTotal().impuesto.toFixed(2)}</span>
+                  <span>{formatCOP(calcularTotal().impuesto)}</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold border-t border-gray-200 pt-2">
                   <span>Total:</span>
-                  <span>${calcularTotal().total.toFixed(2)}</span>
+                  <span>{formatCOP(calcularTotal().total)}</span>
                 </div>
               </div>
               
