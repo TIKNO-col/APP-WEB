@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Download, Trash2 } from 'lucide-react';
+import { Download, Trash2, BarChart3, Calendar, Users, Package, TrendingUp, FileText, Filter, Search } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { makeAuthenticatedRequest } from '../services/auth';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -485,191 +486,395 @@ const InformesPage = () => {
   };
 
   return (
-    <div className="p-6">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-900">Informes</h1>
-        <p className="mt-2 text-sm text-gray-600">Gestiona y genera reportes de ventas por fecha, cliente o producto</p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-4 sm:p-6">
+      {/* Encabezado */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-8"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl">
+              <BarChart3 className="h-8 w-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-gray-900 to-blue-600 bg-clip-text text-transparent">
+                Informes
+              </h1>
+              <p className="text-sm sm:text-base text-gray-600 mt-1">
+                Gestiona y genera reportes de ventas detallados
+              </p>
+            </div>
+          </div>
+        </div>
+      </motion.div>
 
       {/* Navbar de pestañas */}
-      <div className="mb-6 border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          {['fecha', 'cliente', 'producto'].map((tipo) => (
-            <button
-              key={tipo}
-              onClick={() => setTipoInforme(tipo)}
-              className={`${tipoInforme === tipo ? 'border-black text-black' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'} whitespace-nowrap border-b-2 px-1 pb-4 text-sm font-medium capitalize`}
-            >
-              Por {tipo}
-            </button>
-          ))}
-        </nav>
-      </div>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="mb-8"
+      >
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-2">
+          <nav className="flex flex-col sm:flex-row gap-2">
+            {[
+              { key: 'fecha', label: 'Por Fecha', icon: Calendar },
+              { key: 'cliente', label: 'Por Cliente', icon: Users },
+              { key: 'producto', label: 'Por Producto', icon: Package }
+            ].map(({ key, label, icon: Icon }) => (
+              <motion.button
+                key={key}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setTipoInforme(key)}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
+                  tipoInforme === key 
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg' 
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                }`}
+              >
+                <Icon className="h-5 w-5" />
+                <span className="text-sm sm:text-base">{label}</span>
+              </motion.button>
+            ))}
+          </nav>
+        </div>
+      </motion.div>
 
       {/* Filtros según el tipo de informe */}
-      <div className="mb-6 space-y-4">
-        {tipoInforme === 'fecha' && (
-          <div className="space-y-4">
-            <div className="flex space-x-4">
-              <div className="w-1/2">
-                <label className="block text-sm font-medium text-gray-700">Fecha inicio</label>
-                <input
-                  type="date"
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2"
-                  value={fechaInicio}
-                  onChange={(e) => setFechaInicio(e.target.value)}
-                />
-              </div>
-              <div className="w-1/2">
-                <label className="block text-sm font-medium text-gray-700">Fecha fin</label>
-                <input
-                  type="date"
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2"
-                  value={fechaFin}
-                  onChange={(e) => setFechaFin(e.target.value)}
-                />
-              </div>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="mb-8"
+      >
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl">
+              <Filter className="h-5 w-5 text-white" />
             </div>
-            <button
-              onClick={generarReporte}
-              className="rounded-lg bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700"
-            >
-              Generar reporte
-            </button>
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Filtros de Búsqueda</h3>
           </div>
-        )}
 
-        {tipoInforme === 'cliente' && (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Buscar cliente</label>
-              <input
-                type="text"
-                className="mt-1 block w-3/4 rounded-lg border border-gray-300 px-3 py-2"
-                value={clienteBusqueda}
-                onChange={(e) => setClienteBusqueda(e.target.value)}
-                placeholder="Nombre del cliente o cédula/ID"
-              />
-            </div>
-            <button
-              onClick={generarReporte}
-              className="rounded-lg bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700"
-            >
-              Generar reporte
-            </button>
-          </div>
-        )}
+          <AnimatePresence mode="wait">
+            {tipoInforme === 'fecha' && (
+              <motion.div 
+                key="fecha"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="space-y-6"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                      <Calendar className="h-4 w-4" />
+                      Fecha inicio
+                    </label>
+                    <input
+                      type="date"
+                      className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      value={fechaInicio}
+                      onChange={(e) => setFechaInicio(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                      <Calendar className="h-4 w-4" />
+                      Fecha fin
+                    </label>
+                    <input
+                      type="date"
+                      className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      value={fechaFin}
+                      onChange={(e) => setFechaFin(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={generarReporte}
+                  className="flex items-center gap-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                >
+                  <FileText className="h-5 w-5" />
+                  Generar reporte
+                </motion.button>
+              </motion.div>
+            )}
 
-        {tipoInforme === 'producto' && (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Buscar producto</label>
-              <input
-                type="text"
-                className="mt-1 block w-3/4 rounded-lg border border-gray-300 px-3 py-2"
-                value={productoBusqueda}
-                onChange={(e) => setProductoBusqueda(e.target.value)}
-                placeholder="Nombre del producto"
-              />
-            </div>
-            <button
-              onClick={generarReporte}
-              className="rounded-lg bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700"
-            >
-              Generar reporte
-            </button>
-          </div>
-        )}
-      </div>
+            {tipoInforme === 'cliente' && (
+              <motion.div 
+                key="cliente"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="space-y-6"
+              >
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                    <Search className="h-4 w-4" />
+                    Buscar cliente
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      className="w-full sm:w-3/4 rounded-xl border border-gray-300 px-4 py-3 pl-12 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      value={clienteBusqueda}
+                      onChange={(e) => setClienteBusqueda(e.target.value)}
+                      placeholder="Nombre del cliente o cédula/ID"
+                    />
+                    <Users className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  </div>
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={generarReporte}
+                  className="flex items-center gap-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                >
+                  <FileText className="h-5 w-5" />
+                  Generar reporte
+                </motion.button>
+              </motion.div>
+            )}
+
+            {tipoInforme === 'producto' && (
+              <motion.div 
+                key="producto"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="space-y-6"
+              >
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                    <Search className="h-4 w-4" />
+                    Buscar producto
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      className="w-full sm:w-3/4 rounded-xl border border-gray-300 px-4 py-3 pl-12 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      value={productoBusqueda}
+                      onChange={(e) => setProductoBusqueda(e.target.value)}
+                      placeholder="Nombre del producto"
+                    />
+                    <Package className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  </div>
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={generarReporte}
+                  className="flex items-center gap-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                >
+                  <FileText className="h-5 w-5" />
+                  Generar reporte
+                </motion.button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </motion.div>
 
       {/* Resumen de totales */}
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="rounded-lg bg-blue-50 p-4">
-          <h4 className="text-sm font-medium text-blue-900">
-            {tipoInforme === 'producto' ? 'Número de Items' : 'Número de Ventas'}
-          </h4>
-          <p className="text-2xl font-bold text-blue-600">{cantidadTotal}</p>
-        </div>
-        <div className="rounded-lg bg-green-50 p-4">
-          <h4 className="text-sm font-medium text-green-900">Monto Total</h4>
-          <p className="text-2xl font-bold text-green-600">{formatCOP(montoTotal)}</p>
-        </div>
-      </div>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2"
+      >
+        <motion.div 
+          whileHover={{ scale: 1.02, y: -2 }}
+          className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border border-blue-200 shadow-lg"
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 bg-blue-500 rounded-xl">
+              <TrendingUp className="h-5 w-5 text-white" />
+            </div>
+            <h4 className="text-sm font-semibold text-blue-900">
+              {tipoInforme === 'producto' ? 'Número de Items' : 'Número de Ventas'}
+            </h4>
+          </div>
+          <p className="text-3xl font-bold text-blue-600">{cantidadTotal}</p>
+          <p className="text-xs text-blue-700 mt-1">
+            {tipoInforme === 'producto' ? 'Items encontrados' : 'Ventas registradas'}
+          </p>
+        </motion.div>
+        
+        <motion.div 
+          whileHover={{ scale: 1.02, y: -2 }}
+          className="bg-gradient-to-br from-green-50 to-emerald-100 rounded-2xl p-6 border border-green-200 shadow-lg"
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 bg-green-500 rounded-xl">
+              <TrendingUp className="h-5 w-5 text-white" />
+            </div>
+            <h4 className="text-sm font-semibold text-green-900">Monto Total</h4>
+          </div>
+          <p className="text-3xl font-bold text-green-600">{formatCOP(montoTotal)}</p>
+          <p className="text-xs text-green-700 mt-1">Valor acumulado</p>
+        </motion.div>
+      </motion.div>
 
       {/* Vista previa del reporte */}
-      <div className="mb-6">
-        <h3 className="mb-4 text-lg font-medium text-gray-900">Vista previa del reporte</h3>
-        {loading ? (
-          <div className="flex justify-center py-8">
-            <div className="text-gray-500">Cargando datos...</div>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="mb-6"
+      >
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-xl overflow-hidden">
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200 px-6 py-5">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gray-600 rounded-xl">
+                <FileText className="h-5 w-5 text-white" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Vista Previa del Reporte</h3>
+            </div>
           </div>
-        ) : (
-          <div className="rounded-lg border border-gray-200 bg-white">
+          
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <div className="text-gray-500 text-lg">Cargando datos...</div>
+            </div>
+          ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-gray-500">
-                <thead className="bg-gray-50 text-xs uppercase text-gray-700">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
                   <tr>
-                    <th scope="col" className="px-6 py-3">ID</th>
-                    <th scope="col" className="px-6 py-3">Fecha</th>
-                    <th scope="col" className="px-6 py-3">Cliente</th>
-                    <th scope="col" className="px-6 py-3">Producto</th>
-                    <th scope="col" className="px-6 py-3">Cantidad</th>
-                    <th scope="col" className="px-6 py-3">Precio</th>
-                    <th scope="col" className="px-6 py-3">Subtotal</th>
-                    <th scope="col" className="px-6 py-3">IVA (19%)</th>
-                    <th scope="col" className="px-6 py-3">Total</th>
-                    <th scope="col" className="px-6 py-3">Acciones</th>
+                    <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700">
+                      ID Venta
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700">
+                      Fecha
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700">
+                      Cliente
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700">
+                      Producto
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700">
+                      Cantidad
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700">
+                      Precio
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700">
+                      Subtotal
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700">
+                      IVA
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700">
+                      Total
+                    </th>
+                    <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider text-gray-700">
+                      Acciones
+                    </th>
                   </tr>
                 </thead>
-                <tbody>
-                  {ventasFiltradas.length === 0 ? (
-                    <tr>
-                      <td colSpan={10} className="px-6 py-8 text-center text-gray-500">
-                        No se encontraron resultados
-                      </td>
-                    </tr>
-                  ) : (
-                    ventasFiltradas.map((item, index) => (
-                      <tr key={item.id || `venta-${index}`} className="border-b bg-white hover:bg-gray-50">
-                        <td className="px-6 py-4 font-medium text-gray-900">{item.id}</td>
-                        <td className="px-6 py-4">{item.fecha}</td>
-                        <td className="px-6 py-4">{item.cliente}</td>
-                        <td className="px-6 py-4">{item.producto}</td>
-                        <td className="px-6 py-4">{item.cantidad}</td>
-                        <td className="px-6 py-4">{formatCOP(item.precio)}</td>
-                        <td className="px-6 py-4">{formatCOP(item.subtotal)}</td>
-                        <td className="px-6 py-4">{formatCOP(item.impuesto)}</td>
-                        <td className="px-6 py-4">{formatCOP(item.total)}</td>
-                        <td className="px-6 py-4">
-                          <button
-                            onClick={() => eliminarVenta(item.id)}
-                            className="text-red-600 hover:text-red-900 p-1 rounded"
-                            title="Eliminar venta"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  <AnimatePresence>
+                    {ventasFiltradas.length === 0 ? (
+                      <tr>
+                        <td colSpan={10} className="px-6 py-12 text-center text-gray-500 text-lg">
+                          No se encontraron resultados
                         </td>
                       </tr>
-                    ))
-                  )}
+                    ) : (
+                      ventasFiltradas.map((item, index) => (
+                        <motion.tr 
+                          key={item.id || `venta-${index}`}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 20 }}
+                          transition={{ delay: index * 0.05 }}
+                          className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200"
+                        >
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              #{item.id}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                            {item.fecha}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div className="flex items-center gap-2">
+                              <Users className="h-4 w-4 text-gray-400" />
+                              {item.cliente}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div className="flex items-center gap-2">
+                              <Package className="h-4 w-4 text-gray-400" />
+                              {item.producto}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                              {item.cantidad}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {formatCOP(item.precio)}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {formatCOP(item.subtotal)}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-orange-600">
+                            {formatCOP(item.impuesto)}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm font-bold text-green-600">
+                            {formatCOP(item.total)}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-center">
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => eliminarVenta(item.id)}
+                              className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors duration-200"
+                              title="Eliminar venta"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </motion.button>
+                          </td>
+                        </motion.tr>
+                      ))
+                    )}
+                  </AnimatePresence>
                 </tbody>
               </table>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </motion.div>
 
       {/* Botón Descargar PDF */}
-      <div className="flex justify-end">
-        <button
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="flex justify-center"
+      >
+        <motion.button
+          whileHover={{ scale: 1.05, y: -2 }}
+          whileTap={{ scale: 0.95 }}
           onClick={descargarPDF}
           disabled={ventasFiltradas.length === 0 || loading}
-          className="flex items-center rounded-lg bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-2xl shadow-xl hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 transition-all duration-200"
         >
-          <Download className="mr-2 h-4 w-4" />
-          Descargar PDF ({ventasFiltradas.length} registros)
-        </button>
-      </div>
+          <div className="p-1 bg-white/20 rounded-lg">
+            <Download className="h-5 w-5" />
+          </div>
+          <span className="text-lg">Descargar PDF ({ventasFiltradas.length} registros)</span>
+        </motion.button>
+      </motion.div>
     </div>
   );
 };

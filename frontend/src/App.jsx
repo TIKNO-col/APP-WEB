@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import Auth from './components/Auth'
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
-import Sidebar from './components/Sidebar'
+import ResponsiveLayout from './components/ResponsiveLayout'
 import Clientes from './pages/Clientes'
 import Productos from './pages/Productos'
 import Ventas from './pages/Ventas'
@@ -32,14 +32,9 @@ const ProtectedRoute = ({ children }) => {
 
 const Dashboard = () => {
   return (
-    <div className="min-h-screen bg-white">
-      <div className="flex">
-        <Sidebar />
-        <div className="flex-1 ml-64 p-8">
-          <Outlet />
-        </div>
-      </div>
-    </div>
+    <ResponsiveLayout>
+      <Outlet />
+    </ResponsiveLayout>
   );
 };
 
