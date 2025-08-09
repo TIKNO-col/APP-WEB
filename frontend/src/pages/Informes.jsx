@@ -15,11 +15,25 @@ const InformesPage = () => {
   const [fechaFin, setFechaFin] = useState('');
   const [clienteBusqueda, setClienteBusqueda] = useState('');
   const [productoBusqueda, setProductoBusqueda] = useState('');
+  const [usuarioActual, setUsuarioActual] = useState(null);
 
   // Cargar datos desde la API
   useEffect(() => {
     cargarDatos();
+    cargarUsuarioActual();
   }, []);
+
+  const cargarUsuarioActual = async () => {
+    try {
+      const response = await makeAuthenticatedRequest('/usuarios/perfil/');
+      if (response.ok) {
+        const userData = await response.json();
+        setUsuarioActual(userData);
+      }
+    } catch (error) {
+      console.error('Error al cargar usuario:', error);
+    }
+  };
 
   const cargarDatos = async () => {
     setLoading(true);
@@ -238,26 +252,105 @@ const InformesPage = () => {
       
       console.log('Datos calculados:', { cantidadTotal, montoTotal, ventasFiltradas: ventasFiltradas.length });
       
-      // Configurar el título del documento
-      const titulo = `Reporte por ${tipoInforme.charAt(0).toUpperCase() + tipoInforme.slice(1)}`;
-      doc.setFontSize(18);
-      doc.text(titulo, 14, 22);
+      // === ENCABEZADO PROFESIONAL ===
+      // Fondo azul para el encabezado
+      doc.setFillColor(37, 99, 235); // Azul profesional
+      doc.rect(0, 0, 210, 35, 'F');
       
-      // Agregar fecha de generación
-      doc.setFontSize(11);
-      doc.text(`Generado el: ${new Date().toLocaleDateString('es-ES')}`, 14, 32);
+      // Título principal en blanco
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(20);
+      doc.setFont('helvetica', 'bold');
+      const titulo = `REPORTE DE VENTAS - ${tipoInforme.toUpperCase()}`;
+      doc.text(titulo, 14, 20);
       
-      // Agregar resumen
-      const tipoConteo = tipoInforme === 'producto' ? 'Número de Items' : 'Número de Ventas';
-      doc.text(`${tipoConteo}: ${cantidadTotal}`, 14, 42);
-      doc.text(`Monto Total: ${formatCOP(montoTotal)}`, 14, 52);
+      // Subtítulo
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Sistema de Gestión Comercial', 14, 28);
+      
+      // === INFORMACIÓN DEL REPORTE ===
+      doc.setTextColor(0, 0, 0); // Volver a negro
+      let yPosition = 50;
+      
+      // Información del usuario que genera el reporte
+      if (usuarioActual) {
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Generado por:', 14, yPosition);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`${usuarioActual.nombre} (${usuarioActual.email})`, 50, yPosition);
+        yPosition += 7;
+      }
+      
+      // Fecha de generación
+      doc.setFont('helvetica', 'bold');
+      doc.text('Fecha de generación:', 14, yPosition);
+      doc.setFont('helvetica', 'normal');
+      doc.text(new Date().toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }), 65, yPosition);
+      yPosition += 7;
+      
+      // Rango de fechas para reportes por fecha
+      if (tipoInforme === 'fecha' && fechaInicio && fechaFin) {
+        doc.setFont('helvetica', 'bold');
+        doc.text('Período del reporte:', 14, yPosition);
+        doc.setFont('helvetica', 'normal');
+        const fechaInicioFormateada = new Date(fechaInicio).toLocaleDateString('es-ES');
+        const fechaFinFormateada = new Date(fechaFin).toLocaleDateString('es-ES');
+        doc.text(`${fechaInicioFormateada} - ${fechaFinFormateada}`, 65, yPosition);
+        yPosition += 7;
+      }
+      
+      // Tipo de reporte
+      doc.setFont('helvetica', 'bold');
+      doc.text('Tipo de reporte:', 14, yPosition);
+      doc.setFont('helvetica', 'normal');
+      const tipoTexto = tipoInforme === 'fecha' ? 'Por Fecha' : 
+                       tipoInforme === 'cliente' ? 'Por Cliente' : 'Por Producto';
+      doc.text(tipoTexto, 65, yPosition);
+      yPosition += 10;
+      
+      // === RESUMEN EJECUTIVO ===
+      // Fondo gris claro para el resumen
+      doc.setFillColor(248, 250, 252);
+      doc.rect(14, yPosition, 182, 25, 'F');
+      
+      // Borde del resumen
+      doc.setDrawColor(203, 213, 225);
+      doc.rect(14, yPosition, 182, 25);
+      
+      yPosition += 8;
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(51, 65, 85);
+      doc.text('RESUMEN EJECUTIVO', 20, yPosition);
+      
+      yPosition += 8;
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      const tipoConteo = tipoInforme === 'producto' ? 'Total de Items' : 'Total de Ventas';
+      doc.text(`${tipoConteo}: ${cantidadTotal}`, 20, yPosition);
+      doc.text(`Monto Total: ${formatCOP(montoTotal)}`, 120, yPosition);
+      
+      yPosition += 20;
       
       // Verificar si hay datos para la tabla
       if (ventasFiltradas.length === 0) {
-        doc.text('No hay datos para mostrar', 14, 70);
+        doc.setTextColor(239, 68, 68);
+        doc.setFontSize(12);
+        doc.text('No hay datos para mostrar en el período seleccionado', 14, yPosition);
         doc.save(`reporte_${tipoInforme}_${new Date().toISOString().split('T')[0]}.pdf`);
         return;
       }
+      
+      // === TABLA DE DATOS ===
+      doc.setTextColor(0, 0, 0);
       
       // Configurar las columnas de la tabla
       const columns = [
@@ -265,8 +358,8 @@ const InformesPage = () => {
         { header: 'Fecha', dataKey: 'fecha' },
         { header: 'Cliente', dataKey: 'cliente' },
         { header: 'Producto', dataKey: 'producto' },
-        { header: 'Cantidad', dataKey: 'cantidad' },
-        { header: 'Precio', dataKey: 'precio' },
+        { header: 'Cant.', dataKey: 'cantidad' },
+        { header: 'Precio Unit.', dataKey: 'precio' },
         { header: 'Subtotal', dataKey: 'subtotal' },
         { header: 'IVA (19%)', dataKey: 'impuesto' },
         { header: 'Total', dataKey: 'total' }
@@ -285,32 +378,73 @@ const InformesPage = () => {
         total: formatCOP(item.total)
       }));
       
-      console.log('Datos preparados para la tabla:', data.slice(0, 2)); // Mostrar solo los primeros 2 para debug
+      console.log('Datos preparados para la tabla:', data.slice(0, 2));
       
-      // Generar la tabla
-       autoTable(doc, {
-         columns: columns,
-         body: data,
-         startY: 60,
-         styles: {
-           fontSize: 8,
-           cellPadding: 3
-         },
-         headStyles: {
-           fillColor: [71, 85, 105], // Color gris oscuro
-           textColor: 255,
-           fontStyle: 'bold'
-         },
-         alternateRowStyles: {
-           fillColor: [249, 250, 251] // Color gris claro alternado
-         },
-         margin: { top: 60 }
-       });
+      // Generar la tabla con estilo profesional
+      autoTable(doc, {
+        columns: columns,
+        body: data,
+        startY: yPosition,
+        styles: {
+          fontSize: 8,
+          cellPadding: 4,
+          lineColor: [203, 213, 225],
+          lineWidth: 0.5
+        },
+        headStyles: {
+          fillColor: [37, 99, 235], // Azul profesional
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          fontSize: 9,
+          cellPadding: 5
+        },
+        alternateRowStyles: {
+          fillColor: [248, 250, 252] // Gris muy claro
+        },
+        columnStyles: {
+          id: { cellWidth: 15 },
+          fecha: { cellWidth: 22 },
+          cliente: { cellWidth: 25 },
+          producto: { cellWidth: 30 },
+          cantidad: { cellWidth: 15, halign: 'center' },
+          precio: { cellWidth: 20, halign: 'right' },
+          subtotal: { cellWidth: 20, halign: 'right' },
+          impuesto: { cellWidth: 18, halign: 'right' },
+          total: { cellWidth: 20, halign: 'right', fontStyle: 'bold' }
+        },
+        margin: { left: 14, right: 14 },
+        didDrawPage: function (data) {
+          // Pie de página
+          const pageCount = doc.internal.getNumberOfPages();
+          const pageSize = doc.internal.pageSize;
+          const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
+          
+          doc.setFontSize(8);
+          doc.setTextColor(107, 114, 128);
+          doc.text(
+            `Página ${data.pageNumber} de ${pageCount}`,
+            data.settings.margin.left,
+            pageHeight - 10
+          );
+          
+          doc.text(
+            `Generado el ${new Date().toLocaleDateString('es-ES')} - Sistema de Gestión Comercial`,
+            pageSize.width - 14,
+            pageHeight - 10,
+            { align: 'right' }
+          );
+        }
+      });
       
       console.log('PDF generado exitosamente');
       
-      // Descargar el PDF
-      doc.save(`reporte_${tipoInforme}_${new Date().toISOString().split('T')[0]}.pdf`);
+      // Descargar el PDF con nombre más descriptivo
+      const fechaArchivo = new Date().toISOString().split('T')[0];
+      const nombreArchivo = tipoInforme === 'fecha' && fechaInicio && fechaFin 
+        ? `reporte_${tipoInforme}_${fechaInicio}_${fechaFin}_${fechaArchivo}.pdf`
+        : `reporte_${tipoInforme}_${fechaArchivo}.pdf`;
+      
+      doc.save(nombreArchivo);
     } catch (error) {
       console.error('Error al generar PDF:', error);
       alert('Error al generar el PDF. Por favor, revisa la consola para más detalles.');
