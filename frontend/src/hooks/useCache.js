@@ -12,16 +12,23 @@ const useCache = (module, endpoint, options = {}) => {
     transform = null // Función para transformar los datos antes de guardarlos
   } = options;
 
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Inicializar con datos del cache si están disponibles
+  const initialCachedData = cacheService.get(module, params);
+  const initialCacheInfo = cacheService.getInfo(module, params);
+  
+  const [data, setData] = useState(initialCachedData);
+  const [loading, setLoading] = useState(!initialCachedData);
   const [error, setError] = useState(null);
-  const [lastFetch, setLastFetch] = useState(null);
-  const [isFromCache, setIsFromCache] = useState(false);
+  const [lastFetch, setLastFetch] = useState(initialCacheInfo?.timestamp || null);
+  const [isFromCache, setIsFromCache] = useState(!!initialCachedData);
 
   // Función para obtener datos del caché o de la API
-  const fetchData = useCallback(async (forceRefresh = false) => {
+  const fetchData = useCallback(async (forceRefresh = false, backgroundUpdate = false) => {
     try {
-      setLoading(true);
+      // Solo mostrar loading si no es una actualización en background
+      if (!backgroundUpdate) {
+        setLoading(true);
+      }
       setError(null);
 
       // Intentar obtener del caché primero (si no es refresh forzado)
@@ -134,7 +141,14 @@ const useCache = (module, endpoint, options = {}) => {
   // Efecto para cargar datos inicialmente
   useEffect(() => {
     if (autoFetch) {
-      fetchData();
+      // Si ya tenemos datos del cache, hacer fetch en background sin loading
+       if (initialCachedData) {
+         // Fetch en background para actualizar datos
+         fetchData(false, true).catch(console.error);
+       } else {
+         // No hay cache, hacer fetch normal
+         fetchData();
+       }
     }
   }, [module, endpoint, JSON.stringify(params), autoFetch, ...dependencies]);
 

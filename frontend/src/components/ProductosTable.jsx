@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import ProductoModal from './ProductoModal';
 import { Search, MoreVertical, AlertTriangle } from 'lucide-react';
-import { supabase } from '../supabase';
 import { Edit2, Trash2, Eye } from 'lucide-react';
 import { formatCOP } from '../utils/formatters';
+import { useProductosCache } from '../hooks/useCache';
+import { makeAuthenticatedRequest } from '../services/auth';
+import RefreshButton, { CacheStatus } from './RefreshButton';
 
 const categorias = [
   'Todas',
@@ -20,57 +22,50 @@ const categorias = [
 ];
 
 const ProductosTableContainer = () => {
+  const {
+    data: productos,
+    loading,
+    error,
+    refresh,
+    updateItem,
+    removeItem,
+    addItem,
+    isFromCache,
+    lastFetch,
+    cacheInfo
+  } = useProductosCache();
+  
   const [searchTerm, setSearchTerm] = useState('');
-  const [productos, setProductos] = useState([]);
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('Todas');
   const [precioMin, setPrecioMin] = useState('');
   const [precioMax, setPrecioMax] = useState('');
   const [mostrarStockBajo, setMostrarStockBajo] = useState(false);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [productoSeleccionado, setProductoSeleccionado] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    fetchProductos();
-  }, []);
-
-  const fetchProductos = async () => {
-    try {
-      const { data: productos, error } = await supabase
-        .from('productos')
-        .select('*, categoria:categorias(nombre)');
-
-      if (error) throw error;
-
-      setProductos(productos);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching productos:', error);
-      setError(error.message);
-      setLoading(false);
-    }
-  };
 
   const handleDelete = async (id) => {
     if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
       try {
-        const { error } = await supabase
-          .from('productos')
-          .delete()
-          .eq('id', id);
+        const response = await makeAuthenticatedRequest(`/productos/${id}/`, {
+          method: 'DELETE',
+        });
 
-        if (error) throw error;
-
-        setProductos(productos.filter(producto => producto.id !== id));
+        if (response.ok) {
+          // Actualizar caché eliminando el producto
+          removeItem(id);
+          alert('Producto eliminado exitosamente');
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || 'Error al eliminar el producto');
+        }
       } catch (error) {
-        console.error('Error deleting producto:', error);
-        alert('Error al eliminar el producto');
+        console.error('Error al eliminar:', error);
+        alert(error.message);
       }
     }
   };
 
-  const filteredProductos = productos.filter(producto => {
+  const filteredProductos = (productos || []).filter(producto => {
     const matchSearch = Object.values(producto).some(value =>
       value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -83,11 +78,59 @@ const ProductosTableContainer = () => {
     return matchSearch && matchCategoria && matchPrecioMin && matchPrecioMax && matchStockBajo;
   });
 
-  if (loading) return <div>Cargando productos...</div>;
-  if (error) return <div>Error: {error}</div>;
+  // Mostrar error solo si no hay datos en cache
+  if (error && !productos) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-md p-4">
+        <div className="text-red-700">Error: {error}</div>
+        <button 
+          onClick={refresh}
+          className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
+        >
+          Reintentar
+        </button>
+      </div>
+    );
+  }
+
+  const handleModalClose = (productoActualizado) => {
+    setModalAbierto(false);
+    setProductoSeleccionado(null);
+    
+    if (productoActualizado) {
+      if (productoSeleccionado) {
+        // Actualización
+        updateItem(productoActualizado);
+      } else {
+        // Nuevo producto
+        addItem(productoActualizado);
+      }
+    }
+  };
 
   return (
     <div className="space-y-4">
+      {/* Header con información del cache y botón de refresh */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-800">Lista de Productos</h2>
+          <CacheStatus 
+            isFromCache={isFromCache}
+            lastFetch={lastFetch}
+            cacheInfo={cacheInfo}
+            className="mt-1"
+          />
+        </div>
+        <RefreshButton
+          onRefresh={refresh}
+          loading={loading}
+          lastUpdate={lastFetch}
+          variant="outline"
+          size="sm"
+        />
+      </div>
+      
+      {/* Filtros */}
       <div className="flex flex-wrap gap-4">
         <div className="flex-1 min-w-[200px]">
           <div className="relative">
@@ -224,11 +267,7 @@ const ProductosTableContainer = () => {
 
       <ProductoModal
         isOpen={modalAbierto}
-        onClose={() => {
-          setModalAbierto(false);
-          setProductoSeleccionado(null);
-          fetchProductos(); // Recargar productos después de cerrar el modal
-        }}
+        onClose={handleModalClose}
         producto={productoSeleccionado}
       />
     </div>
@@ -396,4 +435,5 @@ const ProductosTable = ({ productos, onEdit, onDelete, loading }) => {
   );
 };
 
-export default ProductosTableContainer;
+export default ProductosTable;
+export { ProductosTableContainer };

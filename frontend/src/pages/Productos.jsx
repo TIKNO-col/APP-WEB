@@ -17,7 +17,9 @@ const Productos = () => {
     updateItem,
     removeItem,
     addItem,
-    lastUpdated
+    isFromCache,
+    lastFetch,
+    cacheInfo
   } = useProductosCache();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProducto, setSelectedProducto] = useState(null);
@@ -47,19 +49,21 @@ const Productos = () => {
   const handleDelete = async (id) => {
     if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
       try {
-        const { error } = await supabase
-          .from('productos')
-          .delete()
-          .eq('id', id);
+        const response = await makeAuthenticatedRequest(`/productos/${id}/`, {
+          method: 'DELETE',
+        });
 
-        if (error) throw error;
-        
-        // Actualizar el caché
-        removeItem(id);
-        alert('Producto eliminado exitosamente');
+        if (response.ok) {
+          // Actualizar caché eliminando el producto
+          removeItem(id);
+          alert('Producto eliminado exitosamente');
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || 'Error al eliminar el producto');
+        }
       } catch (error) {
-        console.error('Error deleting producto:', error);
-        alert('Error al eliminar el producto');
+        console.error('Error al eliminar:', error);
+        alert(error.message);
       }
     }
   };
@@ -71,7 +75,7 @@ const Productos = () => {
     if (productoActualizado) {
       if (selectedProducto) {
         // Actualización
-        updateItem(productoActualizado.id, productoActualizado);
+        updateItem(productoActualizado);
       } else {
         // Nuevo producto
         addItem(productoActualizado);
@@ -97,7 +101,11 @@ const Productos = () => {
             )}
           </div>
         </div>
-        <CacheStatus lastUpdated={lastUpdated} />
+        <CacheStatus 
+          isFromCache={isFromCache}
+          lastFetch={lastFetch}
+          cacheInfo={cacheInfo}
+        />
       </div>
 
       {error && (
