@@ -162,7 +162,7 @@ const VentasPage = () => {
 
   const calcularTotal = () => {
     const subtotal = carrito.reduce((total, item) => total + (item.precio * item.cantidad), 0);
-    const impuesto = subtotal * 0.16; // 16% de impuesto
+    const impuesto = subtotal * 0.19; // 19% de impuesto (IVA Colombia)
     const total = subtotal + impuesto;
     return { subtotal, impuesto, total };
   };
@@ -431,7 +431,7 @@ const VentasPage = () => {
                   <span>{formatCOP(calcularTotal().subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span>Impuesto (16%):</span>
+                  <span>Impuesto (19%):</span>
                   <span>{formatCOP(calcularTotal().impuesto)}</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold border-t border-gray-200 pt-2">

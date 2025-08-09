@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Download } from 'lucide-react';
+import { Download, Trash2 } from 'lucide-react';
 import { makeAuthenticatedRequest } from '../services/auth';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -50,6 +50,7 @@ const InformesPage = () => {
             id: venta.id,
             fecha: fechaFormateada,
             cliente: venta.cliente_nombre || 'Cliente no especificado',
+            cliente_cedula: venta.cliente_cedula,
             total: parseFloat(venta.total),
             items: venta.items || []
           };
@@ -114,6 +115,8 @@ const InformesPage = () => {
               const producto = productos.find(p => p.id === item.producto_id);
               
               const subtotal = item.cantidad * parseFloat(item.precio_unitario);
+              const impuesto = subtotal * 0.19; // 19% IVA Colombia
+              const totalConImpuesto = subtotal + impuesto;
               ventasFiltradas.push({
                 id: venta.id,
                 fecha: venta.fecha,
@@ -121,7 +124,9 @@ const InformesPage = () => {
                 producto: item.producto_nombre || (producto ? producto.nombre : 'Producto no encontrado'),
                 cantidad: item.cantidad,
                 precio: parseFloat(item.precio_unitario),
-                total: subtotal
+                subtotal: subtotal,
+                impuesto: impuesto,
+                total: totalConImpuesto
               });
             });
           }
@@ -132,9 +137,10 @@ const InformesPage = () => {
         // Expandir items para filtro por cliente sin filtro por producto
         ventasFiltradas = [];
         ventas.forEach(venta => {
-          // Verificar filtro de cliente
+          // Verificar filtro de cliente (por nombre o por ID/cédula)
           const cumpleFiltroCliente = !clienteBusqueda || 
-            venta.cliente.toLowerCase().includes(clienteBusqueda.toLowerCase());
+            venta.cliente.toLowerCase().includes(clienteBusqueda.toLowerCase()) ||
+            (venta.cliente_cedula && venta.cliente_cedula.toString().includes(clienteBusqueda));
           
           if (cumpleFiltroCliente && venta.items && venta.items.length > 0) {
             venta.items.forEach(item => {
@@ -164,13 +170,15 @@ const InformesPage = () => {
               // Buscar el producto por ID
               const producto = productos.find(p => p.id === item.producto_id);
               
-              // Si no hay búsqueda específica o el producto coincide con la búsqueda
+              // Si no hay búsqueda específica o el producto coincide con la búsqueda (solo por nombre)
               if (!productoBusqueda || 
                   (producto && producto.nombre.toLowerCase().includes(productoBusqueda.toLowerCase())) ||
                   (item.producto_nombre && item.producto_nombre.toLowerCase().includes(productoBusqueda.toLowerCase()))) {
                 
                 // Calcular el subtotal (cantidad * precio_unitario)
                 const subtotal = item.cantidad * parseFloat(item.precio_unitario);
+                const impuesto = subtotal * 0.19; // 19% IVA Colombia
+                const totalConImpuesto = subtotal + impuesto;
                 
                 ventasFiltradas.push({
                   id: venta.id,
@@ -179,7 +187,9 @@ const InformesPage = () => {
                   producto: item.producto_nombre || (producto ? producto.nombre : 'Producto no encontrado'),
                   cantidad: item.cantidad,
                   precio: parseFloat(item.precio_unitario),
-                  total: subtotal
+                  subtotal: subtotal,
+                  impuesto: impuesto,
+                  total: totalConImpuesto
                 });
               }
             });
@@ -257,6 +267,8 @@ const InformesPage = () => {
         { header: 'Producto', dataKey: 'producto' },
         { header: 'Cantidad', dataKey: 'cantidad' },
         { header: 'Precio', dataKey: 'precio' },
+        { header: 'Subtotal', dataKey: 'subtotal' },
+        { header: 'IVA (19%)', dataKey: 'impuesto' },
         { header: 'Total', dataKey: 'total' }
       ];
       
@@ -268,6 +280,8 @@ const InformesPage = () => {
         producto: item.producto || '',
         cantidad: item.cantidad || 0,
         precio: formatCOP(item.precio),
+        subtotal: formatCOP(item.subtotal),
+        impuesto: formatCOP(item.impuesto),
         total: formatCOP(item.total)
       }));
       
@@ -300,6 +314,39 @@ const InformesPage = () => {
     } catch (error) {
       console.error('Error al generar PDF:', error);
       alert('Error al generar el PDF. Por favor, revisa la consola para más detalles.');
+    }
+  };
+
+  const eliminarVenta = async (ventaId) => {
+    if (!window.confirm('¿Estás seguro de que deseas eliminar esta venta? Esta acción no se puede deshacer.')) {
+      return;
+    }
+
+    try {
+      const response = await makeAuthenticatedRequest(`/ventas/${ventaId}/`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        // Recargar los datos después de eliminar
+        await cargarDatos();
+        alert('Venta eliminada exitosamente');
+      } else {
+        // Obtener el mensaje de error específico del servidor
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.detail || `Error ${response.status}: ${response.statusText}`;
+        
+        if (response.status === 403) {
+          alert('No tienes permisos para eliminar ventas. Solo los administradores y staff pueden realizar esta acción.');
+        } else {
+          alert(`Error al eliminar la venta: ${errorMessage}`);
+        }
+        
+        console.error('Error response:', response.status, errorData);
+      }
+    } catch (error) {
+      console.error('Error al eliminar venta:', error);
+      alert('Error de conexión al eliminar la venta. Por favor, verifica tu conexión e inténtalo de nuevo.');
     }
   };
 
@@ -367,7 +414,7 @@ const InformesPage = () => {
                 className="mt-1 block w-3/4 rounded-lg border border-gray-300 px-3 py-2"
                 value={clienteBusqueda}
                 onChange={(e) => setClienteBusqueda(e.target.value)}
-                placeholder="Nombre del cliente"
+                placeholder="Nombre del cliente o cédula/ID"
               />
             </div>
             <button
@@ -434,13 +481,16 @@ const InformesPage = () => {
                     <th scope="col" className="px-6 py-3">Producto</th>
                     <th scope="col" className="px-6 py-3">Cantidad</th>
                     <th scope="col" className="px-6 py-3">Precio</th>
+                    <th scope="col" className="px-6 py-3">Subtotal</th>
+                    <th scope="col" className="px-6 py-3">IVA (19%)</th>
                     <th scope="col" className="px-6 py-3">Total</th>
+                    <th scope="col" className="px-6 py-3">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   {ventasFiltradas.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                      <td colSpan={10} className="px-6 py-8 text-center text-gray-500">
                         No se encontraron resultados
                       </td>
                     </tr>
@@ -453,7 +503,18 @@ const InformesPage = () => {
                         <td className="px-6 py-4">{item.producto}</td>
                         <td className="px-6 py-4">{item.cantidad}</td>
                         <td className="px-6 py-4">{formatCOP(item.precio)}</td>
+                        <td className="px-6 py-4">{formatCOP(item.subtotal)}</td>
+                        <td className="px-6 py-4">{formatCOP(item.impuesto)}</td>
                         <td className="px-6 py-4">{formatCOP(item.total)}</td>
+                        <td className="px-6 py-4">
+                          <button
+                            onClick={() => eliminarVenta(item.id)}
+                            className="text-red-600 hover:text-red-900 p-1 rounded"
+                            title="Eliminar venta"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </td>
                       </tr>
                     ))
                   )}
