@@ -221,7 +221,7 @@ const VentasPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4 sm:p-6">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 p-4 sm:p-6">
         <motion.div 
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -250,10 +250,10 @@ const VentasPage = () => {
           className="mb-6 sm:mb-8"
         >
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl">
+            <div className="p-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl">
               <ShoppingCart className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
             </div>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-600 bg-clip-text text-transparent">
               Nueva Venta
             </h1>
           </div>
@@ -292,10 +292,10 @@ const VentasPage = () => {
           className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6"
         >
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl">
+            <div className="p-2 bg-blue-600 rounded-xl">
               <User className="h-5 w-5 text-white" />
             </div>
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Cliente</h3>
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900"  >Cliente</h3>
           </div>
           
           <div className="space-y-4">
@@ -342,7 +342,7 @@ const VentasPage = () => {
           className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6"
         >
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl">
+            <div className="p-2 bg-blue-600 rounded-xl">
               <Package className="h-5 w-5 text-white" />
             </div>
             <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Productos</h3>
@@ -358,13 +358,13 @@ const VentasPage = () => {
               <input
                 type="text"
                 placeholder="Buscar productos..."
-                className="w-full rounded-xl border border-gray-300 pl-12 pr-4 py-3 text-sm sm:text-base focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 bg-gray-50 focus:bg-white"
+                className="w-full rounded-xl border border-gray-300 pl-12 pr-4 py-3 text-sm sm:text-base focus:outline-none focus:ring-2 transition-all duration-200 bg-gray-50 focus:bg-white"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             <select
-              className="rounded-xl border border-gray-300 px-4 py-3 text-sm sm:text-base focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 bg-gray-50 focus:bg-white"
+              className="rounded-xl border border-gray-300 px-4 py-3 text-sm sm:text-base focus:outline-none focus:ring-2 transition-all duration-200 bg-gray-50 focus:bg-white"
               value={categoriaSeleccionada}
               onChange={(e) => setCategoriaSeleccionada(e.target.value)}
             >
@@ -423,7 +423,7 @@ const VentasPage = () => {
                   {/* Información del producto */}
                   <div className="flex-1 space-y-3">
                     <div>
-                      <h4 className="font-semibold text-gray-900 text-sm sm:text-base line-clamp-2 group-hover:text-purple-600 transition-colors">
+                      <h4 className="font-semibold text-gray-900 text-sm sm:text-base line-clamp-2 transition-colors">
                         {producto.nombre}
                       </h4>
                       <p className="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2">
@@ -442,7 +442,7 @@ const VentasPage = () => {
                         <span className="text-gray-600 font-medium">{producto.stock} disponibles</span>
                       </div>
                       {producto.categoria_nombre && (
-                        <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs font-medium">
+                        <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-medium">
                           {producto.categoria_nombre}
                         </span>
                       )}
@@ -519,7 +519,7 @@ const VentasPage = () => {
                         className={`flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 ${
                           producto.stock <= 0
                             ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                            : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 focus:ring-purple-500 shadow-lg hover:shadow-xl'
+                            : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-600 focus:ring-blue-500 shadow-lg hover:shadow-xl'
                         }`}
                       >
                         {producto.stock <= 0 ? (
@@ -566,7 +566,7 @@ const VentasPage = () => {
           className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6"
         >
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-gradient-to-r from-orange-500 to-red-600 rounded-xl">
+            <div className="p-2 bg-gradient-to-r from-orange-500 to-yellow-600 rounded-xl">
               <CreditCard className="h-5 w-5 text-white" />
             </div>
             <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Carrito de Compras</h3>

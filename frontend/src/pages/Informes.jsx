@@ -495,7 +495,7 @@ const InformesPage = () => {
       >
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl">
+            <div className="p-3 bg-gradient-to-r from-blue-600 to-blue-600 rounded-2xl">
               <BarChart3 className="h-8 w-8 text-white" />
             </div>
             <div>
@@ -531,7 +531,7 @@ const InformesPage = () => {
                 onClick={() => setTipoInforme(key)}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
                   tipoInforme === key 
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg' 
+                    ? 'bg-gradient-to-r from-blue-600 to-blue-300 text-white shadow-lg' 
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                 }`}
               >
@@ -552,7 +552,7 @@ const InformesPage = () => {
       >
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6">
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl">
+            <div className="p-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl">
               <Filter className="h-5 w-5 text-white" />
             </div>
             <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Filtros de Búsqueda</h3>
@@ -570,24 +570,24 @@ const InformesPage = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                      <Calendar className="h-4 w-4" />
+                      <Calendar className="h-4 w-4 text-gray-600" />
                       Fecha inicio
                     </label>
                     <input
                       type="date"
-                      className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      className="w-full rounded-xl border border-gray-300 bg-white text-gray-500 px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-400 hover:border-gray-400 transition-all duration-200 placeholder-gray-500"
                       value={fechaInicio}
                       onChange={(e) => setFechaInicio(e.target.value)}
                     />
                   </div>
                   <div>
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                      <Calendar className="h-4 w-4" />
+                      <Calendar className="h-4 w-4 text-gray-600" />
                       Fecha fin
                     </label>
                     <input
                       type="date"
-                      className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      className="w-full rounded-xl border border-gray-300 bg-white text-gray-500 px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-400 hover:border-gray-400 transition-all duration-200 placeholder-gray-500"
                       value={fechaFin}
                       onChange={(e) => setFechaFin(e.target.value)}
                     />
@@ -597,7 +597,7 @@ const InformesPage = () => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={generarReporte}
-                  className="flex items-center gap-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  className="flex items-center gap-3 bg-gradient-to-r from-blue-600 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-300 transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
                   <FileText className="h-5 w-5" />
                   Generar reporte
@@ -633,7 +633,7 @@ const InformesPage = () => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={generarReporte}
-                  className="flex items-center gap-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  className="flex items-center gap-3 bg-gradient-to-r from-blue-600 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-300 transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
                   <FileText className="h-5 w-5" />
                   Generar reporte
@@ -669,7 +669,7 @@ const InformesPage = () => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={generarReporte}
-                  className="flex items-center gap-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  className="flex items-center gap-3 bg-gradient-to-r from-blue-600 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-300 transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
                   <FileText className="h-5 w-5" />
                   Generar reporte
@@ -817,7 +817,7 @@ const InformesPage = () => {
                             </div>
                           </td>
                           <td className="px-4 py-4 whitespace-nowrap">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
                               {item.cantidad}
                             </span>
                           </td>
