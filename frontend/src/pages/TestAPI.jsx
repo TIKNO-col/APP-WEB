@@ -16,7 +16,7 @@ const TestAPI = () => {
       console.log('Testing API...');
       
       // Test directo sin autenticación
-      const response = await fetch('http://localhost:8000/api/productos/', {
+      const response = await fetch('http://https://erp-tikno.onrender.com//api/productos/', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

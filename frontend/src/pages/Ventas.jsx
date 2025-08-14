@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../supabase';
 import { formatCOP } from '../utils/formatters';
 
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = 'https://erp-tikno.onrender.com/api';
 
 // Función para obtener el token de autenticación
 const getAuthToken = () => {
