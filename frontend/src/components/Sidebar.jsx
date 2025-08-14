@@ -100,7 +100,7 @@ const Sidebar = ({ isMobile = false, onItemClick = () => {} }) => {
             transition={{ duration: 0.3 }}
             className="text-xl font-bold text-white"
           >
-            VentasApp
+            Tikno Market
           </motion.h1>
         </div>
       )}
