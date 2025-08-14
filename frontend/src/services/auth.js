@@ -1,6 +1,6 @@
 // Servicio de autenticación
 
-const BASE_URL = 'http://localhost:8000/api';
+const BASE_URL = 'https://erp-tikno.onrender.com/api';
 
 // Función para refrescar el token
 async function refreshToken() {
