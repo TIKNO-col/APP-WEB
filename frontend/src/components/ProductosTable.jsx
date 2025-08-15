@@ -55,12 +55,29 @@ const ProductosTableContainer = () => {
           removeItem(id);
           alert('Producto eliminado exitosamente');
         } else {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.detail || 'Error al eliminar el producto');
+          let errorMessage = 'Error al eliminar el producto';
+          
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.detail || errorData.message || errorMessage;
+          } catch (parseError) {
+            // Si no se puede parsear la respuesta, usar el status
+            if (response.status === 401) {
+              errorMessage = 'No tienes autorización para eliminar productos. Por favor, inicia sesión nuevamente.';
+            } else if (response.status === 403) {
+              errorMessage = 'No tienes permisos suficientes para eliminar productos.';
+            } else if (response.status === 404) {
+              errorMessage = 'El producto no fue encontrado.';
+            } else {
+              errorMessage = `Error del servidor (${response.status}): ${response.statusText}`;
+            }
+          }
+          
+          throw new Error(errorMessage);
         }
       } catch (error) {
         console.error('Error al eliminar:', error);
-        alert(error.message);
+        alert(`Error: ${error.message}`);
       }
     }
   };

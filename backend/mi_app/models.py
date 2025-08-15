@@ -17,6 +17,10 @@ class Usuario(AbstractUser):
     is_active = models.BooleanField(default=True, db_index=True)
     created_at = models.DateTimeField(default=timezone.now, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    # Eliminar relaciones con grupos y permisos de Django
+    groups = None
+    user_permissions = None
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'nombre']

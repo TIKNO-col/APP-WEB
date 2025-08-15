@@ -24,15 +24,11 @@ Usuario = get_user_model()
 
 class RegistroUsuarioView(CreateAPIView):
     queryset = Usuario.objects.all()
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.AllowAny,)
     serializer_class = UsuarioSerializer
 
     def create(self, request, *args, **kwargs):
-        if request.user.rol not in ['admin', 'staff']:
-            return Response(
-                {'detail': 'Solo los administradores y staff pueden crear nuevos usuarios'},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        # Permitir registro público de usuarios
         return super().create(request, *args, **kwargs)
 
 class CustomTokenObtainPairView(TokenObtainPairView):
@@ -338,37 +334,7 @@ class ListaUsuariosView(ListAPIView):
             queryset = queryset.filter(id=self.request.user.id)
         return queryset.order_by('-created_at')
 
-class PerfilUsuarioView(RetrieveUpdateAPIView):
-    serializer_class = UsuarioSerializer
-    permission_classes = (permissions.IsAuthenticated,)
-    
-    def get_object(self):
-        if self.kwargs.get('pk'):
-            return Usuario.objects.select_related().get(pk=self.kwargs['pk'])
-        return self.request.user
 
-    def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        
-        if request.user.rol not in ['admin', 'staff']:
-            if 'rol' in request.data or 'zona_acceso' in request.data:
-                return Response(
-                    {'detail': 'No tienes permiso para modificar roles o zonas de acceso'},
-                    status=status.HTTP_403_FORBIDDEN
-                )
-        
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-
-        return Response(serializer.data)
-
-    def delete(self, request, *args, **kwargs):
-        if request.user.rol not in ['admin', 'staff']:
-            return Response({'detail': 'No tienes permiso para eliminar usuarios'}, 
-                            status=status.HTTP_403_FORBIDDEN)
-        return super().destroy(request, *args, **kwargs)
 
 class UsuarioDetailView(RetrieveUpdateDestroyAPIView):
     serializer_class = UsuarioSerializer
@@ -401,13 +367,9 @@ class UsuarioDetailView(RetrieveUpdateDestroyAPIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def get_object(self):
-        obj = super().get_object()
-        self.check_object_permissions(self.request, obj)
-        return obj
-
     def destroy(self, request, *args, **kwargs):
-        if request.user.rol not in ['admin', 'staff']:
+        # Verificar permisos de administrador
+        if request.user.rol not in ['admin', 'staff', 'Admin', 'Staff']:
             return Response(
                 {'detail': 'No tienes permiso para eliminar usuarios'},
                 status=status.HTTP_403_FORBIDDEN
@@ -415,52 +377,34 @@ class UsuarioDetailView(RetrieveUpdateDestroyAPIView):
         
         try:
             usuario = self.get_object()
+            # Verificar que no se elimine a sí mismo
             if usuario.id == request.user.id:
                 return Response(
                     {'detail': 'No puedes eliminar tu propio usuario'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+            
+            # Eliminar el usuario
             usuario.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
+            
         except Usuario.DoesNotExist:
             return Response(
                 {'detail': 'Usuario no encontrado'},
                 status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {'detail': f'Error al eliminar el usuario: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
     def get_queryset(self):
         # Si es admin o staff, puede ver todos los usuarios
-        if self.request.user.rol in ['admin', 'staff']:
+        if self.request.user.rol in ['admin', 'staff', 'Admin', 'Staff']:
             return Usuario.objects.all().order_by('-created_at')
         # Si no es admin o staff, solo puede verse a sí mismo
         return Usuario.objects.filter(id=self.request.user.id)
-
-    def get_object(self):
-        obj = Usuario.objects.get(pk=self.kwargs['pk'])
-        self.check_object_permissions(self.request, obj)
-        return obj
-
-    def delete(self, request, *args, **kwargs):
-        if request.user.rol not in ['admin', 'staff']:
-            return Response(
-                {'detail': 'No tienes permiso para eliminar usuarios'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        try:
-            usuario = self.get_object()
-            if usuario.id == request.user.id:
-                return Response(
-                    {'detail': 'No puedes eliminar tu propio usuario'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            usuario.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        except Usuario.DoesNotExist:
-            return Response(
-                {'detail': 'Usuario no encontrado'},
-                status=status.HTTP_404_NOT_FOUND
-            )
 
 class ClienteViewSet(viewsets.ModelViewSet):
     queryset = Cliente.objects.all()
@@ -500,7 +444,7 @@ class CategoriaViewSet(viewsets.ModelViewSet):
 class ProductoViewSet(viewsets.ModelViewSet):
     queryset = Producto.objects.all()
     serializer_class = ProductoSerializer
-    permission_classes = [permissions.AllowAny]  # Temporalmente permitir acceso sin autenticación
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]  # Permitir lectura sin autenticación, escritura con autenticación
 
     def get_queryset(self):
         queryset = Producto.objects.all().order_by('-created_at')
@@ -526,12 +470,23 @@ class ProductoViewSet(viewsets.ModelViewSet):
         return super().update(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
-        if request.user.rol not in ['admin', 'staff']:
+        # Verificar si el usuario está autenticado
+        if not request.user.is_authenticated:
             return Response(
-                {'detail': 'Solo los administradores y staff pueden eliminar productos'},
-                status=status.HTTP_403_FORBIDDEN
+                {'detail': 'Autenticación requerida'},
+                status=status.HTTP_401_UNAUTHORIZED
             )
-        return super().destroy(request, *args, **kwargs)
+        
+        # Por ahora, permitir a cualquier usuario autenticado eliminar productos
+        # TODO: Implementar validación de roles más específica cuando sea necesario
+        
+        try:
+            return super().destroy(request, *args, **kwargs)
+        except Exception as e:
+            return Response(
+                {'detail': f'Error al eliminar el producto: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 class CarritoViewSet(viewsets.ModelViewSet):
     queryset = Carrito.objects.all()

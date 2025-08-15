@@ -87,8 +87,36 @@ const UsuarioList = () => {
           removeItem(usuario.id);
           alert('Usuario eliminado exitosamente');
         } else {
-          const data = await response.json().catch(() => ({}));
-          throw new Error(data.detail || 'Error al eliminar el usuario');
+          let errorMessage = 'Error al eliminar el usuario';
+          
+          try {
+            const errorData = await response.json();
+            if (errorData.detail) {
+              errorMessage = errorData.detail;
+            } else if (errorData.message) {
+              errorMessage = errorData.message;
+            }
+          } catch (parseError) {
+            // Si no se puede parsear la respuesta, usar mensaje basado en status
+            switch (response.status) {
+              case 401:
+                errorMessage = 'No estás autenticado. Por favor, inicia sesión nuevamente.';
+                break;
+              case 403:
+                errorMessage = 'No tienes permisos para eliminar usuarios.';
+                break;
+              case 404:
+                errorMessage = 'Usuario no encontrado.';
+                break;
+              case 500:
+                errorMessage = 'Error interno del servidor. Intenta nuevamente.';
+                break;
+              default:
+                errorMessage = `Error ${response.status}: ${response.statusText || 'Error desconocido'}`;
+            }
+          }
+          
+          throw new Error(errorMessage);
         }
       } catch (error) {
         console.error('Error deleting usuario:', error);

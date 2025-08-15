@@ -46,7 +46,16 @@ const Productos = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (producto) => {
+    // Extraer el ID del objeto producto
+    const id = producto.id || producto.pk;
+    
+    if (!id) {
+      console.error('ID del producto no encontrado:', producto);
+      alert('Error: No se pudo identificar el producto a eliminar');
+      return;
+    }
+
     if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
       try {
         const response = await makeAuthenticatedRequest(`/productos/${id}/`, {
